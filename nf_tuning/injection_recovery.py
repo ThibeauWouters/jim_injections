@@ -1,10 +1,12 @@
 # The following is needed on CIT cluster to avoid an obscure Python error
+import os
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.75"
+os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
 # Regular imports 
 import argparse
-import os
 import copy
 import numpy as np
 from astropy.time import Time
@@ -155,10 +157,10 @@ def body(args):
             "n_loop_training": 400,
             "n_loop_production": 30,
             "n_local_steps": 5,
-            "n_global_steps": 100,
-            "n_epochs": 10,
+            "n_global_steps": 400,
+            "n_epochs": 50,
             "n_chains": 1000, 
-            "learning_rate": 0.001, 
+            "learning_rate": 0.001, # or a scheduler -- see below!!
             "max_samples": 50000, 
             "momentum": 0.9, 
             "batch_size": 50000, 
@@ -191,12 +193,13 @@ def body(args):
         if key in hyperparameters:
             hyperparameters[key] = value
             
-    schedule_fn = optax.warmup_cosine_decay_schedule(1e-5, 1e-2, 10, hyperparameters["n_epochs"], end_value=1e-4, exponent=1.0)
+    # schedule_fn = optax.warmup_cosine_decay_schedule(1e-5, 1e-2, 10, hyperparameters["n_epochs"], end_value=1e-4, exponent=1.0)
+    total_epochs = hyperparameters["n_epochs"] * hyperparameters["n_loop_training"]
+    start = int(total_epochs / 10)
+    schedule_fn = optax.polynomial_schedule(1e-3, 1e-4, 1.0, total_epochs-start, transition_begin=start)
+    
+    # Change to the scheduler HERE
     hyperparameters["learning_rate"] = schedule_fn
-
-    os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
-    print(f"Running on GPU {args.GPU_device}")
 
     print(f"Saving output to {args.outdir}")
     if args.waveform_approximant == "TaylorF2":
@@ -517,6 +520,12 @@ def main(given_args = None):
     if len(args.N) == 0:
         N = utils.get_N(args.outdir)
         args.N = N
+    
+    # os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
+    print(f"Running on GPU {args.GPU_device}")
+    print("jax.devices()")
+    print(jax.devices())
     
     start = time.time()
     body(args)

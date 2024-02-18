@@ -151,10 +151,10 @@ def body(args):
     "flowmc": 
         {
             "n_loop_training": 400,
-            "n_loop_production": 20,
+            "n_loop_production": 30,
             "n_local_steps": 5,
-            "n_global_steps": 400,
-            "n_epochs": 50,
+            "n_global_steps": 100,
+            "n_epochs": 100,
             "n_chains": 1000, 
             "learning_rate": 0.001, 
             "max_samples": 50000, 
