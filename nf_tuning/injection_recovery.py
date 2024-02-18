@@ -166,7 +166,7 @@ def body(args):
             "batch_size": 50000, 
             "use_global": True, 
             "logging": True, 
-            "keep_quantile": 0.5, 
+            "keep_quantile": 0.0, 
             "local_autotune": None, 
             "train_thinning": 10, 
             "output_thinning": 30, 
