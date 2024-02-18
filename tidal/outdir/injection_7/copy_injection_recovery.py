@@ -144,6 +144,9 @@ def body(args):
         - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
     """
     
+    # TODO move and get these as arguments
+    # Deal with the hyperparameters
+    naming = NAMING
     HYPERPARAMETERS = {
     "flowmc": 
         {
@@ -153,13 +156,13 @@ def body(args):
             "n_global_steps": 400,
             "n_epochs": 50,
             "n_chains": 1000, 
-            "learning_rate": 0.0001, 
+            "learning_rate": 0.001, 
             "max_samples": 50000, 
             "momentum": 0.9, 
             "batch_size": 50000, 
             "use_global": True, 
             "logging": True, 
-            "keep_quantile": 0.0, 
+            "keep_quantile": 0.5, 
             "local_autotune": None, 
             "train_thinning": 10, 
             "output_thinning": 30, 
@@ -177,6 +180,14 @@ def body(args):
             "num_bins": 8, 
         }
     }
+    
+    flowmc_hyperparameters = HYPERPARAMETERS["flowmc"]
+    jim_hyperparameters = HYPERPARAMETERS["jim"]
+    hyperparameters = {**flowmc_hyperparameters, **jim_hyperparameters}
+    
+    for key, value in args.__dict__.items():
+        if key in hyperparameters:
+            hyperparameters[key] = value
 
     os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
@@ -192,12 +203,10 @@ def body(args):
     if args.outdir[-1] != "/":
         args.outdir += "/"
 
-    outdir = f"{args.outdir}injection_{args.N}/"    
-    # Preamble
-    naming = NAMING
-    flowmc_hyperparameters = HYPERPARAMETERS["flowmc"]
-    jim_hyperparameters = HYPERPARAMETERS["jim"]
-    hyperparameters = {**flowmc_hyperparameters, **jim_hyperparameters}
+    outdir = f"{args.outdir}injection_{args.N}/"
+    # Save the given script hyperparams
+    with open(f"{outdir}script_args.json", 'w') as json_file:
+        json.dump(args.__dict__, json_file)
     
     # Get the prior bounds, both as 1D and 2D arrays
     prior_ranges = jnp.array([PRIOR[name] for name in naming])
@@ -429,16 +438,21 @@ def body(args):
     name = outdir + f'results_training.npz'
     print(f"Saving samples to {name}")
     state = jim.Sampler.get_sampler_state(training = True)
-    chains, log_prob, local_accs, global_accs = state["chains"], state["log_prob"], state["local_accs"], state["global_accs"]
+    chains, log_prob, local_accs, global_accs, loss_vals = state["chains"], state["log_prob"], state["local_accs"], state["global_accs"], state["loss_vals"]
     local_accs = jnp.mean(local_accs, axis=0)
     global_accs = jnp.mean(global_accs, axis=0)
     if args.save_training_chains:
-        np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs, chains=chains)
+        np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs, loss_vals=loss_vals, chains=chains)
     else:
-        np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs)
+        np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs, loss_vals=loss_vals)
     
     utils.plot_accs(local_accs, "Local accs (training)", "local_accs_training", outdir)
     utils.plot_accs(global_accs, "Global accs (training)", "global_accs_training", outdir)
+    utils.plot_loss_vals(loss_vals, "Loss", "loss_vals", outdir)
+    
+    # TODO for testing and checking memory usage accs
+    name = outdir + f'results_training_no_accs.npz'
+    np.savez(name, log_prob=log_prob, loss_vals=loss_vals)
         
     #  - production phase
     name = outdir + f'results_production.npz'

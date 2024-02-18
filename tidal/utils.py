@@ -26,7 +26,8 @@ default_corner_kwargs = dict(bins=40,
                         fill_contours=True,
                         max_n_ticks=4, 
                         min_n_ticks=3,
-                        save=False)
+                        save=False,
+                        truth_color="red")
 
 matplotlib_params = {"axes.grid": True,
         "text.usetex" : True,
@@ -402,6 +403,18 @@ def load_true_params_from_config(outdir):
     
     return true_params
 
+def plot_loss_vals(loss_values, label, name, outdir):
+    loss_values = loss_values.reshape(-1)
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(loss_values, label=label)
+    
+    plt.ylabel(label)
+    plt.yscale('log')
+    plt.xlabel("Iteration")
+    plt.savefig(f"{outdir}{name}.png", bbox_inches='tight')  
+    plt.close()
+
 ######################
 ### POSTPROCESSING ###
 ######################
@@ -450,8 +463,7 @@ def save_prior_bounds(prior_low: jnp.array, prior_high: jnp.array, outdir: str) 
         
     with open(f"{outdir}prior_bounds.json", 'w') as f:
         json.dump(my_dict, f)
-        
-        
+
 ############
 ### MAIN ###
 ############
