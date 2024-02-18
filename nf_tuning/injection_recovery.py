@@ -196,7 +196,12 @@ def body(args):
     # schedule_fn = optax.warmup_cosine_decay_schedule(1e-5, 1e-2, 10, hyperparameters["n_epochs"], end_value=1e-4, exponent=1.0)
     total_epochs = hyperparameters["n_epochs"] * hyperparameters["n_loop_training"]
     start = int(total_epochs / 10)
-    schedule_fn = optax.polynomial_schedule(1e-3, 1e-4, 1.0, total_epochs-start, transition_begin=start)
+   
+    ### POLYNOMIAL SCHEDULER
+    start_lr = 1e-3
+    end_lr = 1e-6
+    power = 4.0
+    schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
     
     # Change to the scheduler HERE
     hyperparameters["learning_rate"] = schedule_fn
@@ -476,9 +481,6 @@ def body(args):
     # Plot the chains as corner plots
     utils.plot_chains(chains, "chains_production", outdir, truths = truths)
     
-    print("Saving the jim hyperparameters")
-    jim.save_hyperparameters(outdir = outdir)
-    
     # Save the NF and show a plot of samples from the flow
     print("Saving the NF")
     jim.Sampler.save_flow(outdir + "nf_model")
@@ -488,6 +490,9 @@ def body(args):
     
     # Finally, copy over this script to the outdir for reproducibility
     shutil.copy2(__file__, outdir + "copy_injection_recovery.py")
+    
+    print("Saving the jim hyperparameters")
+    jim.save_hyperparameters(outdir = outdir)
     
     print("Finished injection recovery successfully!")
 
