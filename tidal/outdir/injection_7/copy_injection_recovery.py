@@ -21,6 +21,25 @@ from jimgw.single_event.waveform import RippleTaylorF2
 from jimgw.prior import Uniform, Composite
 import utils # our plotting and postprocessing utilities script
 
+# Names of the parameters and their ranges for sampling parameters for the injection
+NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
+PRIOR = {
+        "M_c": [0.8759659737275101, 2.6060030916165484],
+        "q": [0.5, 1.0], 
+        "s1_z": [-0.05, 0.05], 
+        "s2_z": [-0.05, 0.05], 
+        "lambda_1": [0.0, 5000.0], 
+        "lambda_2": [0.0, 5000.0], 
+        "d_L": [30.0, 300.0], 
+        "t_c": [-0.1, 0.1], 
+        "phase_c": [0.0, 2 * jnp.pi], 
+        "cos_iota": [-1.0, 1.0], 
+        "psi": [0.0, jnp.pi], 
+        "ra": [0.0, 2 * jnp.pi], 
+        "sin_dec": [-1, 1]
+}
+
+
 ################
 ### ARGPARSE ###
 ################
@@ -57,7 +76,6 @@ def get_parser(**kwargs):
         default=True,
         help="Whether to load and redo an existing injection (True) or to generate a new set of parameters (False).",
     )
-    # TODO empty string and load existing config should be mutually exclusive
     parser.add_argument(
         "--N",
         type=str,
@@ -125,6 +143,40 @@ def body(args):
         - jim hyperparameters: https://github.com/ThibeauWouters/jim/blob/8cb4ef09fefe9b353bfb89273a4bc0ee52060d72/src/jimgw/jim.py#L26
         - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
     """
+    
+    HYPERPARAMETERS = {
+    "flowmc": 
+        {
+            "n_loop_training": 400,
+            "n_loop_production": 20,
+            "n_local_steps": 5,
+            "n_global_steps": 400,
+            "n_epochs": 50,
+            "n_chains": 1000, 
+            "learning_rate": 0.0001, 
+            "max_samples": 50000, 
+            "momentum": 0.9, 
+            "batch_size": 50000, 
+            "use_global": True, 
+            "logging": True, 
+            "keep_quantile": 0.0, 
+            "local_autotune": None, 
+            "train_thinning": 10, 
+            "output_thinning": 30, 
+            "n_sample_max": 10000, 
+            "precompile": False, 
+            "verbose": False, 
+            "outdir": args.outdir
+        }, 
+    "jim": 
+        {
+            "seed": 0, 
+            "n_chains": 1000, 
+            "num_layers": 10, 
+            "hidden_size": [128, 128], 
+            "num_bins": 8, 
+        }
+    }
 
     os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
@@ -135,58 +187,6 @@ def body(args):
         ripple_waveform_fn = RippleTaylorF2
     else:
         raise ValueError("The waveform approximant is not recognized")
-
-    HYPERPARAMETERS = {
-        "flowmc": 
-            {
-                "n_loop_training": 400,
-                "n_loop_production": 20,
-                "n_local_steps": 5,
-                "n_global_steps": 400,
-                "n_epochs": 50,
-                "n_chains": 1000, 
-                "learning_rate": 0.001, 
-                "max_samples": 50000, 
-                "momentum": 0.9, 
-                "batch_size": 50000, 
-                "use_global": True, 
-                "logging": True, 
-                "keep_quantile": 0.0, 
-                "local_autotune": None, 
-                "train_thinning": 10, 
-                "output_thinning": 30, 
-                "n_sample_max": 10000, 
-                "precompile": False, 
-                "verbose": False, 
-                "outdir": args.outdir
-            }, 
-        "jim": 
-            {
-                "seed": 0, 
-                "n_chains": 1000, 
-                "num_layers": 10, 
-                "hidden_size": [128, 128], 
-                "num_bins": 8, 
-            }
-    }
-
-    # Names of the parameters and their ranges for sampling parameters for the injection
-    NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
-    PRIOR = {
-            "M_c": [0.8759659737275101, 2.6060030916165484],
-            "q": [0.5, 1.0], 
-            "s1_z": [-0.05, 0.05], 
-            "s2_z": [-0.05, 0.05], 
-            "lambda_1": [0.0, 5000.0], 
-            "lambda_2": [0.0, 5000.0], 
-            "d_L": [30.0, 300.0], 
-            "t_c": [-0.1, 0.1], 
-            "phase_c": [0.0, 2 * jnp.pi], 
-            "cos_iota": [-1.0, 1.0], 
-            "psi": [0.0, jnp.pi], 
-            "ra": [0.0, 2 * jnp.pi], 
-            "sin_dec": [-1, 1]
-    }
 
     # Before main code, check if outdir is correct dir format TODO improve with sys?
     if args.outdir[-1] != "/":
@@ -273,7 +273,7 @@ def body(args):
         h_sky = waveform(freqs, true_param)
         # Setup interferometers
         ifos = [H1, L1, V1]
-        psd_files = ["./psd.txt", "./psd.txt", "./psd_virgo.txt"]
+        psd_files = ["./psds/psd.txt", "./psds/psd.txt", "./psds/psd_virgo.txt"]
         # inject signal into ifos
         for idx, ifo in enumerate(ifos):
             key, subkey = jax.random.split(key)

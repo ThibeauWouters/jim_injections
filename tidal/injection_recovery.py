@@ -1,94 +1,25 @@
-### GPU stuff
-import os
-import copy
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.75" # select percentage of GPU memory to use
-my_device = '0'
-os.environ['CUDA_VISIBLE_DEVICES'] = my_device
-print(f"Running on GPU {my_device}")
 # The following is needed on CIT cluster to avoid an obscure Python error
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
-### Regular imports
+# Regular imports 
+import argparse
+import os
+import copy
 import numpy as np
-# from scipy.interpolate import interp1d
 from astropy.time import Time
-# import corner # TODO move this to plotting utils / remove unnecessary imports
 import time
 import shutil
 import json
-# jax
 import jax
 jax.config.update("jax_enable_x64", True)
 import jax.numpy as jnp
-from jaxtyping import Float
-# jim
 from jimgw.jim import Jim
-from jimgw.single_event.detector import H1, L1, V1, Detector
+from jimgw.single_event.detector import H1, L1, V1
 from jimgw.single_event.likelihood import HeterodynedTransientLikelihoodFD, TransientLikelihoodFD
 from jimgw.single_event.waveform import RippleTaylorF2
 from jimgw.prior import Uniform, Composite
-# ripple
-from ripple import Mc_eta_to_ms
-print(jax.devices()) # sanity check
-
-# import our own plotting utils script (note: has to be in same directory as this script)
-import utils as utils
-
-####################
-### Script setup ###
-####################
-
-### Script constants
-SNR_THRESHOLD = 12 # skip injections with SNR below this threshold
-waveform_approximant = "TaylorF2" # which waveform approximant to use, either TaylorF2 or IMRPhenomD_NRTidalv2
-OUTDIR = f"./outdir/" # where to save output
-
-print(f"Saving output to {OUTDIR}")
-ripple_waveform_fn = RippleTaylorF2
-relative_binning_binsize = 100 # number of bins for the relative binning
-relative_binning_ref_params_equal_true_params = True # whether to set the reference parameters in the relative binning code to injection parameters
-save_training_chains = False # whether to save training chains or not (can be very large!)
-
-"""
-Explanation of the hyperparameters:
-    - jim hyperparameters: https://github.com/ThibeauWouters/jim/blob/8cb4ef09fefe9b353bfb89273a4bc0ee52060d72/src/jimgw/jim.py#L26
-    - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
-"""
-
-HYPERPARAMETERS = {
-    "flowmc": 
-        {
-            "n_loop_training": 130,
-            "n_loop_production": 20,
-            "n_local_steps": 20,
-            "n_global_steps": 200,
-            "n_epochs": 100,
-            "n_chains": 1000, 
-            "learning_rate": 0.001, 
-            "max_samples": 50000, 
-            "momentum": 0.9, 
-            "batch_size": 50000, 
-            "use_global": True, 
-            "logging": True, 
-            "keep_quantile": 0.0, 
-            "local_autotune": None, 
-            "train_thinning": 10, 
-            "output_thinning": 30, 
-            "n_sample_max": 10000, 
-            "precompile": False, 
-            "verbose": False, 
-            "outdir": OUTDIR
-        }, 
-    "jim": 
-        {
-            "seed": 0, 
-            "n_chains": 1000, 
-            "num_layers": 10, 
-            "hidden_size": [128, 128], 
-            "num_bins": 8, 
-        }
-}
+import utils # our plotting and postprocessing utilities script
 
 # Names of the parameters and their ranges for sampling parameters for the injection
 NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
@@ -108,24 +39,160 @@ PRIOR = {
         "sin_dec": [-1, 1]
 }
 
-# Before main code, check if outdir is correct dir format TODO improve with sys?
-if OUTDIR[-1] != "/":
-    OUTDIR += "/"
 
-###############################
-### Main body of the script ###
-###############################
+################
+### ARGPARSE ###
+################
 
-def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
+# TODO save these into a new file
+def get_parser(**kwargs):
+    add_help = kwargs.get("add_help", True)
+
+    parser = argparse.ArgumentParser(
+        description="Perform an injection recovery.",
+        add_help=add_help,
+    )
+    parser.add_argument(
+        "--GPU-device",
+        type=int,
+        default=0,
+        help="Select GPU index to use.",
+    )
+    parser.add_argument(
+        "--GPU-memory-fraction",
+        type=float,
+        default=0.5,
+        help="Select percentage of GPU memory to use.",
+    )
+    parser.add_argument(
+        "--outdir",
+        type=str,
+        default="./outdir/",
+        help="Output directory for the injection.",
+    )
+    parser.add_argument(
+        "--load-existing-config",
+        type=bool,
+        default=True,
+        help="Whether to load and redo an existing injection (True) or to generate a new set of parameters (False).",
+    )
+    parser.add_argument(
+        "--N",
+        type=str,
+        default="",
+        help="Number (or generically, a custom identifier) of this injection, used to locate the output directory. If an empty string is passed (default), we generate a new injection.",
+    )
+    parser.add_argument(
+        "--SNR-threshold",
+        type=float,
+        default=12,
+        help="Skip injections with SNR below this threshold.",
+    )
+    parser.add_argument(
+        "--waveform-approximant",
+        type=str,
+        default="TaylorF2",
+        help="Which waveform approximant to use. Recommended to use TaylorF2 for now, NRTidalv2 might still be a bit unstable.",
+    )
+    parser.add_argument(
+        "--relative-binning-binsize",
+        type=int,
+        default=100,
+        help="Number of bins for the relative binning.",
+    )
+    parser.add_argument(
+        "--relative-binning-ref-params-equal-true-params",
+        type=bool,
+        default=True,
+        help="Whether to set the reference parameters in the relative binning code to injection parameters.",
+    )
+    parser.add_argument(
+        "--save-training-chains",
+        type=bool,
+        default=False,
+        help="Whether to save training chains or not (can be very large!)",
+    )
+    parser.add_argument(
+        "--eps-mass-matrix",
+        type=float,
+        default=1e-6,
+        help="Overall scale factor to rescale the step size of the local sampler.",
+    )
+    parser.add_argument(
+        "--smart-initial-guess",
+        type=bool,
+        default=False,
+        help="Distribute the walkers around the injected parameters. TODO change this to reference parameters found by the relative binning code.",
+    )
+    # # TODO this has to be implemented
+    # parser.add_argument(
+    #     "--autotune_local_sampler",
+    #     type=bool,
+    #     default=False,
+    #     help="TODO Still has to be implemented! Specify whether to use autotuning for the local sampler.",
+    # )
+    return parser
+    
+####################
+### Script setup ###
+####################
+
+def body(args):
     """
-    Perform an injection and recovery. 
-
-    Args:
-        N (str): Number of this injection, used to locate the output directory.
-        outdir (str): Output directory for the injection.
-        load_existing_config (bool, optional): Whether to load and redo an existing injection. Defaults to False.
+    Run an injection and recovery. To get an explanation of the hyperparameters, go to:
+        - jim hyperparameters: https://github.com/ThibeauWouters/jim/blob/8cb4ef09fefe9b353bfb89273a4bc0ee52060d72/src/jimgw/jim.py#L26
+        - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
     """
+    
+    HYPERPARAMETERS = {
+    "flowmc": 
+        {
+            "n_loop_training": 400,
+            "n_loop_production": 20,
+            "n_local_steps": 5,
+            "n_global_steps": 400,
+            "n_epochs": 50,
+            "n_chains": 1000, 
+            "learning_rate": 0.0001, 
+            "max_samples": 50000, 
+            "momentum": 0.9, 
+            "batch_size": 50000, 
+            "use_global": True, 
+            "logging": True, 
+            "keep_quantile": 0.0, 
+            "local_autotune": None, 
+            "train_thinning": 10, 
+            "output_thinning": 30, 
+            "n_sample_max": 10000, 
+            "precompile": False, 
+            "verbose": False, 
+            "outdir": args.outdir
+        }, 
+    "jim": 
+        {
+            "seed": 0, 
+            "n_chains": 1000, 
+            "num_layers": 10, 
+            "hidden_size": [128, 128], 
+            "num_bins": 8, 
+        }
+    }
 
+    os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
+    print(f"Running on GPU {args.GPU_device}")
+
+    print(f"Saving output to {args.outdir}")
+    if args.waveform_approximant == "TaylorF2":
+        ripple_waveform_fn = RippleTaylorF2
+    else:
+        raise ValueError("The waveform approximant is not recognized")
+
+    # Before main code, check if outdir is correct dir format TODO improve with sys?
+    if args.outdir[-1] != "/":
+        args.outdir += "/"
+
+    outdir = f"{args.outdir}injection_{args.N}/"    
     # Preamble
     naming = NAMING
     flowmc_hyperparameters = HYPERPARAMETERS["flowmc"]
@@ -135,27 +202,21 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     # Get the prior bounds, both as 1D and 2D arrays
     prior_ranges = jnp.array([PRIOR[name] for name in naming])
     prior_low, prior_high = prior_ranges[:, 0], prior_ranges[:, 1]
-    bounds = []
-    for key, value in PRIOR.items():
-        bounds.append(value)
-    bounds = np.asarray(bounds)
+    bounds = np.array(list(PRIOR.values()))
     
     # Now go over to creating parameters, and potentially check SNR cutoff
     network_snr = 0.0
-    print(f"The SNR threshold parameter is set to {SNR_THRESHOLD}")
-    while network_snr < SNR_THRESHOLD:
-        
+    print(f"The SNR threshold parameter is set to {args.SNR_threshold}")
+    while network_snr < args.SNR_threshold:
         # Generate the parameters or load them from an existing file
-        if load_existing_config:
-            config_path = f"{outdir}injection_{N}/config.json"
+        if args.load_existing_config:
+            config_path = f"{outdir}config.json"
             print(f"Loading existing config, path: {config_path}")
             config = json.load(open(config_path))
         else:
             print(f"Generating new config")
-            config = utils.generate_config(prior_low, prior_high, naming, N, OUTDIR)
+            config = utils.generate_config(prior_low, prior_high, naming, args.N, args.outdir)
         
-        # Get outdir and PRNGKey
-        outdir = config["outdir"]
         key = jax.random.PRNGKey(config["seed"])
         
         # Start injections
@@ -193,7 +254,7 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
             'dec':       dec                  # declination
             }
         
-        # Get the true parameter values for the corner plots
+        # Get the true parameter values for the plots
         truths = copy.deepcopy(true_param)
         truths["eta"] = q
         truths = np.fromiter(truths.values(), dtype=float)
@@ -212,7 +273,7 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
         h_sky = waveform(freqs, true_param)
         # Setup interferometers
         ifos = [H1, L1, V1]
-        psd_files = ["./psd.txt", "./psd.txt", "./psd_virgo.txt"]
+        psd_files = ["./psds/psd.txt", "./psds/psd.txt", "./psds/psd_virgo.txt"]
         # inject signal into ifos
         for idx, ifo in enumerate(ifos):
             key, subkey = jax.random.split(key)
@@ -232,9 +293,9 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
         network_snr = np.sqrt(h1_snr**2 + l1_snr**2 + v1_snr**2)
         
         # If the SNR is too low, we need to generate new parameters
-        if network_snr < SNR_THRESHOLD:
-            print(f"Network SNR is less than {SNR_THRESHOLD}, generating new parameters")
-            if load_existing_config:
+        if network_snr < args.SNR_threshold:
+            print(f"Network SNR is less than {args.SNR_threshold}, generating new parameters")
+            if args.load_existing_config:
                 raise ValueError("SNR is less than threshold, but loading existing config. This should not happen!")
     
     print("H1 SNR:", h1_snr)
@@ -246,10 +307,7 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     
     # Priors without transformation 
     Mc_prior       = Uniform(prior_low[0], prior_high[0], naming=['M_c'])
-    q_prior        = Uniform(
-                            prior_low[1],
-                            prior_high[1],
-                            naming=['q'],
+    q_prior        = Uniform(prior_low[1], prior_high[1], naming=['q'],
                             transforms={
                                 'q': (
                                     'eta',
@@ -264,25 +322,19 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     dL_prior       = Uniform(prior_low[6], prior_high[6], naming=['d_L'])
     tc_prior       = Uniform(prior_low[7], prior_high[7], naming=['t_c'])
     phic_prior     = Uniform(prior_low[8], prior_high[8], naming=['phase_c'])
-    cos_iota_prior = Uniform(
-        prior_low[9],
-        prior_high[9],
-        naming=["cos_iota"],
-        transforms={
-            "cos_iota": (
-                "iota",
-                lambda params: jnp.arccos(
-                    jnp.arcsin(jnp.sin(params["cos_iota"] / 2 * jnp.pi)) * 2 / jnp.pi
-                ),
-            )
-        },
-    )
+    cos_iota_prior = Uniform(prior_low[9], prior_high[9], naming=["cos_iota"],
+                            transforms={
+                                "cos_iota": (
+                                    "iota",
+                                    lambda params: jnp.arccos(
+                                        jnp.arcsin(jnp.sin(params["cos_iota"] / 2 * jnp.pi)) * 2 / jnp.pi
+                                    ),
+                                )
+                            },
+                            )
     psi_prior      = Uniform(prior_low[10], prior_high[10], naming=["psi"])
     ra_prior       = Uniform(prior_low[11], prior_high[11], naming=["ra"])
-    sin_dec_prior  = Uniform(
-        prior_low[12],
-        prior_high[12],
-        naming=["sin_dec"],
+    sin_dec_prior  = Uniform(prior_low[12], prior_high[12], naming=["sin_dec"],
         transforms={
             "sin_dec": (
                 "dec",
@@ -318,9 +370,9 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     print("Finished prior setup")
 
     print("Initializing likelihood")
-    if relative_binning_ref_params_equal_true_params:
+    if args.relative_binning_ref_params_equal_true_params:
         ref_params = true_param
-        print("NOTE: Using the true parameters as reference parameters for the relative binning")
+        print("Using the true parameters as reference parameters for the relative binning")
     else:
         ref_params = None
         print("Will search for reference waveform for relative binning")
@@ -329,7 +381,7 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
         ifos,
         prior=complete_prior,
         bounds=bounds,
-        n_bins=relative_binning_binsize,
+        n_bins = args.relative_binning_binsize,
         waveform=waveform,
         trigger_time=config["trigger_time"],
         duration=config["duration"],
@@ -344,7 +396,7 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     mass_matrix = jnp.eye(len(prior_list))
     for idx, prior in enumerate(prior_list):
         mass_matrix = mass_matrix.at[idx, idx].set(prior.xmax - prior.xmin) # fetch the prior range
-    local_sampler_arg = {'step_size': mass_matrix * 1e-5} # scale the overall step size
+    local_sampler_arg = {'step_size': mass_matrix * args.eps_mass_matrix} # set the overall step size
     hyperparameters["local_sampler_arg"] = local_sampler_arg
     
     # Create jim object
@@ -354,23 +406,33 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
         **hyperparameters
     )
     
+    if args.smart_initial_guess:
+        n_chains = hyperparameters["n_chains"]
+        n_dim = len(prior_list)
+        initial_guess = utils.generate_smart_initial_guess(gmst, [H1, L1, V1], true_param, n_chains, n_dim, prior_low, prior_high)
+        # Plot it
+        utils.plot_chains(initial_guess, "initial_guess", outdir, truths = truths)
+    else:
+        initial_guess = jnp.array([])
+    
     ### Finally, do the sampling
-    jim.sample(jax.random.PRNGKey(24))
+    jim.sample(jax.random.PRNGKey(24), initial_guess = initial_guess)
         
     # === Show results, save output ===
 
     # Print a summary to screen:
-    jim.print_summary(transform = False)
+    jim.print_summary()
 
     # Save and plot the results of the run
     #  - training phase
     
     name = outdir + f'results_training.npz'
+    print(f"Saving samples to {name}")
     state = jim.Sampler.get_sampler_state(training = True)
     chains, log_prob, local_accs, global_accs = state["chains"], state["log_prob"], state["local_accs"], state["global_accs"]
     local_accs = jnp.mean(local_accs, axis=0)
     global_accs = jnp.mean(global_accs, axis=0)
-    if save_training_chains:
+    if args.save_training_chains:
         np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs, chains=chains)
     else:
         np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs)
@@ -390,7 +452,7 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     utils.plot_accs(global_accs, "Global accs (production)", "global_accs_production", outdir)
 
     # Plot the chains as corner plots
-    utils.plot_chains(chains, truths, "chains_production", outdir)
+    utils.plot_chains(chains, "chains_production", outdir, truths = truths)
     
     print("Saving the jim hyperparameters")
     jim.save_hyperparameters(outdir = outdir)
@@ -407,22 +469,40 @@ def body(N: str, outdir: str, load_existing_config: bool = False) -> None:
     
     print("Finished injection recovery successfully!")
 
-def main():
+############
+### MAIN ###
+############
+
+def main(given_args = None):
     
-    ## Normal, new injection:
-    N = utils.get_N(OUTDIR)
-    my_string = "================================================================================================================================================================================================================================================"
-    print(my_string)
-    print(f"Running injection script for  N = {N}")
-    print(my_string)
-    body(N, outdir=OUTDIR) # regular, computing on the fly
+    parser = get_parser()
+    args = parser.parse_args()
     
-    # ### Rerun a specific injection
-    # body("7", outdir = OUTDIR, load_existing_config = True) 
+    print(given_args)
     
-if __name__ == "__main__":
+    # Update with given args
+    if given_args is not None:
+        args.__dict__.update(given_args)
+        
+    if args.load_existing_config and args.N == "":
+        raise ValueError("If load_existing_config is True, you need to specify the N argument to locate the existing injection. ")
+        
+    print("------------------------------------")
+    print("Arguments script:")
+    for key, value in args.__dict__.items():
+        print(f"{key}: {value}")
+    print("------------------------------------")
+        
+    print("Starting main code")
+    
+    if len(args.N) == 0:
+        N = utils.get_N(args.outdir)
+        args.N = N
+    
     start = time.time()
-    main()
+    body(args)
     end = time.time()
     print(f"Time taken: {end-start} seconds ({(end-start)/60} minutes)")
     
+if __name__ == "__main__":
+    main()

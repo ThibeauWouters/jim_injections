@@ -1,6 +1,6 @@
-python argparse_injection_recovery.py \
+python injection_recovery.py \
     --GPU-device 0 \
-    --GPU-memory-fraction 0.5 \
+    --GPU-memory-fraction 0.6 \
     --load-existing-config True \
-    --outdir ./test_outdir/ \
+    --outdir ./outdir/ \
     --N 7
