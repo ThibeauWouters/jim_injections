@@ -198,9 +198,10 @@ def body(args):
     start = int(total_epochs / 10)
    
     ### POLYNOMIAL SCHEDULER
-    start_lr = 1e-3
-    end_lr = 1e-5
-    power = 3.0
+    # TODO save a plot of the schedule?
+    start_lr = 1e-2
+    end_lr = 1e-4
+    power = 2.0
     schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
     
     # Change to the scheduler HERE

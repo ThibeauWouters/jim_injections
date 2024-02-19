@@ -199,8 +199,8 @@ def body(args):
    
     ### POLYNOMIAL SCHEDULER
     start_lr = 1e-3
-    end_lr = 1e-6
-    power = 4.0
+    end_lr = 1e-5
+    power = 3.0
     schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
     
     # Change to the scheduler HERE

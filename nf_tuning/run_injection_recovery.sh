@@ -1,6 +1,6 @@
 python injection_recovery.py \
-    --GPU-device 0 \
-    --GPU-memory-fraction 0.5 \
+    --GPU-device 1 \
+    --GPU-memory-fraction 0.75 \
     --load-existing-config True \
     --outdir ./outdir/ \
     --N 7
