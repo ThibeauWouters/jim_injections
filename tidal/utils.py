@@ -114,6 +114,9 @@ def generate_config(prior_low: np.array,
         
     # Create new injection file
     output_path = f'{outdir}injection_{str(N_config)}/'
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+        print("Made injection directory: ", output_path)
     filename = output_path + f"config.json"
     
     if not os.path.exists(output_path):
@@ -340,7 +343,7 @@ def plot_log_prob(log_prob, label, name, outdir):
     log_prob = np.mean(log_prob, axis = 0)
     plt.figure(figsize=(10, 6))
     plt.plot(log_prob, label=label)
-    plt.yscale('log')
+    # plt.yscale('log')
     plt.ylabel(label)
     plt.xlabel("Iteration")
     plt.savefig(f"{outdir}{name}.png", bbox_inches='tight')  
