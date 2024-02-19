@@ -335,6 +335,16 @@ def plot_accs(accs, label, name, outdir):
     plt.xlabel("Iteration")
     plt.savefig(f"{outdir}{name}.png", bbox_inches='tight')  
     plt.close()
+    
+def plot_log_prob(log_prob, label, name, outdir):
+    log_prob = np.mean(log_prob, axis = 0)
+    plt.figure(figsize=(10, 6))
+    plt.plot(log_prob, label=label)
+    plt.yscale('log')
+    plt.ylabel(label)
+    plt.xlabel("Iteration")
+    plt.savefig(f"{outdir}{name}.png", bbox_inches='tight')  
+    plt.close()
 
     
 def plot_chains(chains, name, outdir, truths = None, labels = labels_results_plot):
@@ -386,6 +396,15 @@ def plot_accs_from_file(outdir):
     
     plot_accs(local_accs, 'local_accs', 'local_accs_production', outdir)
     plot_accs(global_accs, 'global_accs', 'global_accs_production', outdir)
+    
+def plot_log_prob_from_file(outdir, which_list = ['training', 'production']):
+    
+    for which in which_list:
+        filename = outdir + f'results_{which}.npz'
+        data = np.load(filename)
+        log_prob= data['log_prob']
+        plot_log_prob(log_prob, f'log_prob_{which}', f'log_prob_{which}', outdir)
+    
     
 def load_true_params_from_config(outdir):
     
@@ -471,6 +490,7 @@ def save_prior_bounds(prior_low: jnp.array, prior_high: jnp.array, outdir: str) 
 def main():
     # If wanted, can have a main here for postprocessing
     pass
+    
 
 if __name__ == "__main__":
     main()
