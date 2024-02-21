@@ -1,6 +1,8 @@
+print("Hello world!")
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.4"
+import copy
+# os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+# os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.4"
 import numpy as np
 # The following is needed on CIT cluster to avoid an obscure Python error
 import psutil
@@ -116,7 +118,7 @@ def body(args):
         start_lr = 1e-3
         end_lr = 1e-5
         power = 4.0
-        schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)s
+        schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
         args.learning_rate = schedule_fn
         scheduler_string = f"Polynomial scheduler: start_lr = {start_lr}, end_lr = {end_lr}, power = {power}, start = {start}"
 
@@ -133,7 +135,7 @@ def body(args):
     elif args.waveform_approximant == "IMRPhenomD_NRTidalv2":
         ripple_waveform_fn = RippleIMRPhenomD_NRTidalv2
         # NOTE we are going to disable the local sampler for now when using NRTv2 (possible bug in jax.grad?)
-        hyperparameters["use_local"] = False
+        args.use_local = False
     else:
         raise ValueError(f"Something went wrong with initializing waveform approximant function.")
 
@@ -165,7 +167,11 @@ def body(args):
         
         # Save the given script hyperparams
         with open(f"{outdir}script_args.json", 'w') as json_file:
-            json.dump(args.__dict__, json_file)
+            # TODO make this less hacky
+            if args.use_scheduler:
+                my_dict = copy.deepcopy(args.__dict__)
+                my_dict["learning_rate"] = scheduler_string
+            json.dump(my_dict, json_file)
         
         # Start injections
         print("Injecting signals . . .")
