@@ -111,12 +111,12 @@ def body(args):
     ### POLYNOMIAL SCHEDULER
     if args.use_scheduler:
         print("Using polynomial learning rate scheduler")
-        total_epochs = args.["n_epochs"] * args.["n_loop_training"]
+        total_epochs = args.n_epochs * args.n_loop_training
         start = int(total_epochs / 10)
         start_lr = 1e-3
         end_lr = 1e-5
         power = 4.0
-        schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
+        schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)s
         args.learning_rate = schedule_fn
         scheduler_string = f"Polynomial scheduler: start_lr = {start_lr}, end_lr = {end_lr}, power = {power}, start = {start}"
 
@@ -360,7 +360,7 @@ def body(args):
     )
     
     if args.smart_initial_guess:
-        n_chains = args["n_chains"]
+        n_chains = args.n_chains
         n_dim = len(prior_list)
         initial_guess = utils.generate_smart_initial_guess(gmst, [H1, L1, V1], true_param, n_chains, n_dim, prior_low, prior_high)
         # Plot it
