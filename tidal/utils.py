@@ -1,4 +1,5 @@
 import os
+import argparse
 import matplotlib.pyplot as plt
 import json
 import numpy as np
@@ -11,7 +12,7 @@ from jaxtyping import Array, Float
 
 from injection_recovery import NAMING
 
-NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
+# NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
 
 default_corner_kwargs = dict(bins=40, 
                         smooth=1., 
@@ -485,6 +486,253 @@ def save_prior_bounds(prior_low: jnp.array, prior_high: jnp.array, outdir: str) 
         
     with open(f"{outdir}prior_bounds.json", 'w') as f:
         json.dump(my_dict, f)
+
+
+################
+### ARGPARSE ###
+################
+"""
+Explanation of the hyperparameters:
+    - jim hyperparameters: https://github.com/ThibeauWouters/jim/blob/8cb4ef09fefe9b353bfb89273a4bc0ee52060d72/src/jimgw/jim.py#L26
+    - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
+"""
+# TODO fetch the usual hyperparams so that they can be added from the command line
+def get_parser(**kwargs):
+    add_help = kwargs.get("add_help", True)
+
+    parser = argparse.ArgumentParser(
+        description="Perform an injection recovery.",
+        add_help=add_help,
+    )
+    parser.add_argument(
+        "--outdir",
+        type=str,
+        default="./outdir/",
+        help="Output directory for the injection.",
+    )
+    parser.add_argument(
+        "--load-existing-config",
+        type=bool,
+        default=False,
+        help="Whether to load and redo an existing injection (True) or to generate a new set of parameters (False).",
+    )
+    parser.add_argument(
+        "--N",
+        type=str,
+        default="",
+        help="Number (or generically, a custom identifier) of this injection, used to locate the output directory. If an empty string is passed (default), we generate a new injection.",
+    )
+    parser.add_argument(
+        "--SNR-threshold",
+        type=float,
+        default=12,
+        help="Skip injections with SNR below this threshold.",
+    )
+    parser.add_argument(
+        "--waveform-approximant",
+        type=str,
+        default="TaylorF2",
+        help="Which waveform approximant to use. Recommended to use TaylorF2 for now, NRTidalv2 might still be a bit unstable.",
+    )
+    parser.add_argument(
+        "--relative-binning-binsize",
+        type=int,
+        default=500,
+        help="Number of bins for the relative binning.",
+    )
+    parser.add_argument(
+        "--relative-binning-ref-params-equal-true-params",
+        type=bool,
+        default=True,
+        help="Whether to set the reference parameters in the relative binning code to injection parameters.",
+    )
+    parser.add_argument(
+        "--save-training-chains",
+        type=bool,
+        default=False,
+        help="Whether to save training chains or not (can be very large!)",
+    )
+    parser.add_argument(
+        "--eps-mass-matrix",
+        type=float,
+        default=1e-6,
+        help="Overall scale factor to rescale the step size of the local sampler.",
+    )
+    parser.add_argument(
+        "--smart-initial-guess",
+        type=bool,
+        default=False,
+        help="Distribute the walkers around the injected parameters. TODO change this to reference parameters found by the relative binning code.",
+    )
+    parser.add_argument(
+        "--use-scheduler",
+        type=bool,
+        default=True,
+        help="Use a learning rate scheduler instead of a fixed learning rate.",
+    )
+    parser.add_argument(
+        "--stopping-criterion-global-acc",
+        type=float,
+        default=1.0,
+        help="Stop the run once we reach this global acceptance rate.",
+    )
+    parser.add_argument(
+        "--n-loop-training",
+        type=int,
+        default=400,
+        help="Number of training loops"
+    )
+    parser.add_argument(
+        "--n-loop-production",
+        type=int,
+        default=50,
+        help="Number of production loops"
+    )
+    parser.add_argument(
+        "--n-local-steps",
+        type=int,
+        default=5,
+        help="Number of local steps"
+    )
+    parser.add_argument(
+        "--n-global-steps",
+        type=int,
+        default=400,
+        help="Number of global steps"
+    )
+    parser.add_argument(
+        "--n-epochs",
+        type=int,
+        default=50,
+        help="Number of epochs"
+    )
+    parser.add_argument(
+        "--n-chains",
+        type=int,
+        default=1000,
+        help="Number of chains"
+    )
+    parser.add_argument(
+        "--learning-rate",
+        type=float,
+        default=0.001,
+        help="Learning rate"
+    )
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=50000,
+        help="Maximum number of samples"
+    )
+    parser.add_argument(
+        "--momentum",
+        type=float,
+        default=0.9,
+        help="Momentum"
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=50000,
+        help="Batch size"
+    )
+    parser.add_argument(
+        "--use-global",
+        type=bool,
+        default=True,
+        help="Use global"
+    )
+    parser.add_argument(
+        "--logging",
+        type=bool,
+        default=True,
+        help="Enable logging"
+    )
+    parser.add_argument(
+        "--keep-quantile",
+        type=float,
+        default=0.0,
+        help="Keep quantile"
+    )
+    parser.add_argument(
+        "--local-autotune",
+        type=str,
+        default=None,
+        help="Local autotune"
+    )
+    parser.add_argument(
+        "--train-thinning",
+        type=int,
+        default=10,
+        help="Training thinning"
+    )
+    parser.add_argument(
+        "--output-thinning",
+        type=int,
+        default=30,
+        help="Output thinning"
+    )
+    parser.add_argument(
+        "--n-sample-max",
+        type=int,
+        default=10000,
+        help="Maximum number of samples"
+    )
+    parser.add_argument(
+        "--precompile",
+        type=bool,
+        default=False,
+        help="Precompile"
+    )
+    parser.add_argument(
+        "--verbose",
+        type=bool,
+        default=False,
+        help="Verbose"
+    )
+    parser.add_argument(
+        "--num-layers",
+        type=int,
+        default=10,
+        help="Number of layers"
+    )
+    parser.add_argument(
+        "--hidden-size",
+        nargs="+",
+        type=int,
+        default=[128, 128],
+        help="Hidden sizes"
+    )
+    parser.add_argument(
+        "--num-bins",
+        type=int,
+        default=8,
+        help="Number of bins"
+    )
+    
+    # # TODO this has to be implemented
+    # parser.add_argument(
+    #     "--autotune_local_sampler",
+    #     type=bool,
+    #     default=False,
+    #     help="TODO Still has to be implemented! Specify whether to use autotuning for the local sampler.",
+    # )
+    # TODO os does not use them?
+    # parser.add_argument(
+    #     "--GPU-device",
+    #     type=int,
+    #     default=0,
+    #     help="Select GPU index to use.",
+    # )
+    # parser.add_argument(
+    #     "--GPU-memory-fraction",
+    #     type=float,
+    #     default=0.5,
+    #     help="Select percentage of GPU memory to use.",
+    # )
+    return parser
+
+
 
 ############
 ### MAIN ###

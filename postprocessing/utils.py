@@ -6,7 +6,7 @@ p.cpu_affinity([0])
 import copy
 import numpy as np
 import json
-# import arviz 
+import arviz 
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 from scipy.stats import kstest, uniform, percentileofscore
@@ -179,8 +179,7 @@ def make_uniform_cumulative_histogram(size: tuple, nb_bins: int = 100) -> np.arr
 
 def get_true_params_and_credible_level(chains: np.array, 
                                        true_params_list: np.array,
-                                       return_first: bool = False,
-                                       two_sided: bool = True) -> tuple[np.array, float]:
+                                       return_first: bool = False) -> tuple[np.array, float]:
     """
     Finds the true parameter set from a list of true parameter sets, and also computes its credible level.
 
@@ -191,25 +190,36 @@ def get_true_params_and_credible_level(chains: np.array,
         tuple[np.array, float]: The select true parameter set, and its credible level.
     """
     
+    # Indices which have to be treated as circular
+    circular_idx = [8, 9, 10, 11, 12]
+    
     if return_first:
         # Ignore the sky location mirrors, just take the first one
         true_params = true_params_list[0]
         true_params_list = [true_params]
     
+    # When checking sky reflected as well, iterate over all "copies"
     for i, true_params in enumerate(true_params_list):
         params_credible_level_list = []
         
-        ### OLD code
+        # ### OLD code
         # boolean_values = np.array(chains < true_params)
         # credible_level = np.mean(boolean_values, axis = 0)
+        # params_credible_level_list = credible_level
         
+        # Iterate over each parameter of this "copy" of parameters
         for j, param in enumerate(true_params):
+            
+            # if j in circular_idx:
+            #     pass
+            # else:
             q = percentileofscore(chains[:, j], param)
             q /= 100.0
-            if two_sided:
-                credible_level = 1 - 2 * min(q, 1-q)
-            else:
-                credible_level = q
+            
+            # Two sided version:
+            credible_level = 1 - 2 * min(q, 1-q)
+            # # One sided version:
+            # credible_level = q
                 
             params_credible_level_list.append(credible_level)
         
@@ -233,7 +243,7 @@ def get_true_params_and_credible_level(chains: np.array,
 
 def get_credible_levels_injections(outdir: str, 
                                    reweigh_distance: bool = False,
-                                   return_first: bool = False,
+                                   return_first: bool = True,
                                    max_number_injections: int = -1) -> np.array:
     """
     Compute the credible levels list for all the injections. 
@@ -255,6 +265,7 @@ def get_credible_levels_injections(outdir: str,
     print("Reading injection results")
     
     credible_level_list = []
+    subdirs = []
     counter = 0
     
     print("Iterating over the injections, going to compute the credible levels")
@@ -266,6 +277,8 @@ def get_credible_levels_injections(outdir: str,
             chains_filename = f"{subdir_path}/results_production.npz"
             if not os.path.isfile(json_path) or not os.path.isfile(chains_filename):
                 continue
+            
+            subdirs.append(subdir)
             
             # Load config, and get the injected parameters
             with open(json_path, "r") as f:
@@ -289,7 +302,7 @@ def get_credible_levels_injections(outdir: str,
                 chains = chains[indices]
                 print("INFO: Resampled chains!")
             
-            # # Get the sky mirrored values as well, NOTE this outputs an array of 2/3 arrays!
+            # # Get the sky mirrored values as well, NOTE this outputs an array of arrays!
             mirrored_values = get_mirror_location(true_params) # tuple
             mirrored_values = np.vstack(mirrored_values) # np array
             all_true_params = np.vstack((true_params, mirrored_values))
@@ -305,7 +318,7 @@ def get_credible_levels_injections(outdir: str,
             
     credible_level_list = np.array(credible_level_list)
     
-    return credible_level_list
+    return credible_level_list, subdirs
 
 def compute_chi_eff(mc, q, chi1, chi2):
     eta = q/(1+q)**2
@@ -315,6 +328,93 @@ def compute_chi_eff(mc, q, chi1, chi2):
     
     return chi_eff
 
+#################
+### DEBUGGING ###
+#################
+
+def plot_distributions_injections(outdir: str, 
+                                  param_index: int = 0,
+                                  **plotkwargs) -> None:
+    """
+    TODO
+    
+    By default, we are checking chirp mass
+    """
+    naming = list(PRIOR.keys())
+    param_name = naming[param_index]
+    print("Checking parameter: ", param_name)
+    
+    plt.figure(figsize=(12, 9))
+    print("Iterating over the injections, going to compute the credible levels")
+    for subdir in tqdm(os.listdir(outdir)):
+        subdir_path = os.path.join(outdir, subdir)
+        
+        if os.path.isdir(subdir_path):
+            json_path = os.path.join(subdir_path, "config.json")
+            chains_filename = f"{subdir_path}/results_production.npz"
+            if not os.path.isfile(json_path) or not os.path.isfile(chains_filename):
+                continue
+            
+            # Load config, and get the true (injected) parameters
+            with open(json_path, "r") as f:
+                config = json.load(f)
+            true_params = np.array([config[name] for name in naming])
+            
+            true_param = true_params[param_index]
+            
+            # Get distribution of samples
+            data = np.load(chains_filename)
+            chains = data['chains'].reshape(-1, len(naming))
+            samples = chains[:, param_index]
+            
+            samples -= true_param
+            # Make histogram
+            plt.hist(samples, **plotkwargs)
+            
+    plt.axvline(0, color = "black", linewidth = 1)
+    plt.xlabel(f"Residuals of {param_name}")
+    plt.ylabel("Density")
+    plt.savefig(f"./pp_TaylorF2/distributions_{param_name}.png")
+    plt.close()
+            
+            
+def plot_credible_levels_injections(outdir: str,
+                                    param_index: int = 0
+) -> None:
+    """
+    TODO
+    """
+    naming = list(PRIOR.keys())
+    param_name = naming[param_index]
+    print("Checking parameter: ", param_name)
+    
+    credible_level_list, _ = get_credible_levels_injections(outdir)
+    
+    plt.figure(figsize=(12, 9))
+    plt.hist(credible_level_list[:, param_index], bins = 20, histtype="step", color="blue", linewidth=2, density=True)
+    plt.xlabel("Credible level")
+    plt.ylabel("Density")
+    plt.title(f"Credible levels {param_name}")
+    plt.savefig(f"./pp_TaylorF2/credible_levels_{param_name}.png")
+    plt.close()
+
+
+def analyze_credible_levels(credible_levels, 
+                            subdirs, 
+                            param_index = 0, 
+                            nb_round: int = 5):
+    subdirs = np.array(subdirs)
+    
+    credible_levels_param = credible_levels[:, param_index]
+    
+    # Sort 
+    sorted_indices = np.argsort(credible_levels_param)
+    credible_levels_param = credible_levels_param[sorted_indices]
+    credible_levels = credible_levels[sorted_indices]
+    subdirs_sorted = subdirs[sorted_indices]
+    
+    for i, (subdir, credible_level) in enumerate(zip(subdirs_sorted, credible_levels_param)):
+        print(f"{subdir}: {np.round(credible_level, nb_round)}")
 
 ####################################
 ### Further postprocessing tools ###

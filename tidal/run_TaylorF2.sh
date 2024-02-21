@@ -1,6 +1,7 @@
 python injection_recovery.py \
     --outdir ./test_outdir/ \
-    --N 7 \
-    --stopping-criterion-global-acc 0.50 \
+    --load-existing-config True \
+    --N 20 \
+    --stopping-criterion-global-acc 0.20 \
     --waveform-approximant TaylorF2 \
-    --relative-binning-binsize 500 \
+    

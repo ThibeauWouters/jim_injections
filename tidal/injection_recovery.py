@@ -2,7 +2,6 @@ import os
 os.environ['CUDA_VISIBLE_DEVICES'] = "3"
 os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
 import numpy as np
-import argparse
 # The following is needed on CIT cluster to avoid an obscure Python error
 import psutil
 p = psutil.Process()
@@ -46,111 +45,6 @@ PRIOR = {
 }
 
 
-################
-### ARGPARSE ###
-################
-
-# TODO save these into a new file
-def get_parser(**kwargs):
-    add_help = kwargs.get("add_help", True)
-
-    parser = argparse.ArgumentParser(
-        description="Perform an injection recovery.",
-        add_help=add_help,
-    )
-    # TODO os does not use them
-    # parser.add_argument(
-    #     "--GPU-device",
-    #     type=int,
-    #     default=0,
-    #     help="Select GPU index to use.",
-    # )
-    # parser.add_argument(
-    #     "--GPU-memory-fraction",
-    #     type=float,
-    #     default=0.5,
-    #     help="Select percentage of GPU memory to use.",
-    # )
-    parser.add_argument(
-        "--outdir",
-        type=str,
-        default="./outdir/",
-        help="Output directory for the injection.",
-    )
-    parser.add_argument(
-        "--load-existing-config",
-        type=bool,
-        default=False,
-        help="Whether to load and redo an existing injection (True) or to generate a new set of parameters (False).",
-    )
-    parser.add_argument(
-        "--N",
-        type=str,
-        default="",
-        help="Number (or generically, a custom identifier) of this injection, used to locate the output directory. If an empty string is passed (default), we generate a new injection.",
-    )
-    parser.add_argument(
-        "--SNR-threshold",
-        type=float,
-        default=12,
-        help="Skip injections with SNR below this threshold.",
-    )
-    parser.add_argument(
-        "--waveform-approximant",
-        type=str,
-        default="TaylorF2",
-        help="Which waveform approximant to use. Recommended to use TaylorF2 for now, NRTidalv2 might still be a bit unstable.",
-    )
-    parser.add_argument(
-        "--relative-binning-binsize",
-        type=int,
-        default=100,
-        help="Number of bins for the relative binning.",
-    )
-    parser.add_argument(
-        "--relative-binning-ref-params-equal-true-params",
-        type=bool,
-        default=True,
-        help="Whether to set the reference parameters in the relative binning code to injection parameters.",
-    )
-    parser.add_argument(
-        "--save-training-chains",
-        type=bool,
-        default=False,
-        help="Whether to save training chains or not (can be very large!)",
-    )
-    parser.add_argument(
-        "--eps-mass-matrix",
-        type=float,
-        default=1e-6,
-        help="Overall scale factor to rescale the step size of the local sampler.",
-    )
-    parser.add_argument(
-        "--smart-initial-guess",
-        type=bool,
-        default=False,
-        help="Distribute the walkers around the injected parameters. TODO change this to reference parameters found by the relative binning code.",
-    )
-    parser.add_argument(
-        "--use-scheduler",
-        type=bool,
-        default=True,
-        help="Use a learning rate scheduler instead of a fixed learning rate.",
-    )
-    parser.add_argument(
-        "--stopping-criterion-global-acc",
-        type=float,
-        default=1.0,
-        help="Stop the run once we reach this global acceptance rate.",
-    )
-    # # TODO this has to be implemented
-    # parser.add_argument(
-    #     "--autotune_local_sampler",
-    #     type=bool,
-    #     default=False,
-    #     help="TODO Still has to be implemented! Specify whether to use autotuning for the local sampler.",
-    # )
-    return parser
     
 ####################
 ### Script setup ###
@@ -167,59 +61,64 @@ def body(args):
     # TODO move and get these as arguments
     # Deal with the hyperparameters
     naming = NAMING
-    HYPERPARAMETERS = {
-    "flowmc": 
-        {
-            "n_loop_training": 400,
-            "n_loop_production": 50,
-            "n_local_steps": 5,
-            "n_global_steps": 400,
-            "n_epochs": 50,
-            "n_chains": 1000, 
-            "learning_rate": 0.001, # using a scheduler below
-            "max_samples": 50000, 
-            "momentum": 0.9, 
-            "batch_size": 50000, 
-            "use_global": True, 
-            "logging": True, 
-            "keep_quantile": 0.0, 
-            "local_autotune": None, 
-            "train_thinning": 10, 
-            "output_thinning": 30, 
-            "n_sample_max": 10000, 
-            "precompile": False, 
-            "verbose": False, 
-            "outdir": args.outdir,
-            "stopping_criterion_global_acc": args.stopping_criterion_global_acc
-        }, 
-    "jim": 
-        {
-            "seed": 0, 
-            "n_chains": 1000, 
-            "num_layers": 10, 
-            "hidden_size": [128, 128], 
-            "num_bins": 8, 
-        }
-    }
+    # HYPERPARAMETERS = {
+    # "flowmc": 
+    #     {
+    #         "n_loop_training": 400,
+    #         "n_loop_production": 50,
+    #         "n_local_steps": 5,
+    #         "n_global_steps": 400,
+    #         "n_epochs": 50,
+    #         "n_chains": 1000, 
+    #         "learning_rate": 0.001, # using a scheduler below
+    #         "max_samples": 50000, 
+    #         "momentum": 0.9, 
+    #         "batch_size": 50000, 
+    #         "use_global": True, 
+    #         "logging": True, 
+    #         "keep_quantile": 0.0, 
+    #         "local_autotune": None, 
+    #         "train_thinning": 10, 
+    #         "output_thinning": 30, 
+    #         "n_sample_max": 10000, 
+    #         "precompile": False, 
+    #         "verbose": False, 
+    #         "outdir": args.outdir,
+    #         "stopping_criterion_global_acc": args.stopping_criterion_global_acc,
+    #         "num_layers": 10, # 10
+    #         "hidden_size": [128,128], # [128,128]
+    #         "num_bins": 8, # 8
+        
+    #     }, 
+    # "jim": 
+    #     {
+    #         "seed": 0, 
+    #         "n_chains": 1000, 
+    #         "num_layers": 10, 
+    #         "hidden_size": [128, 128], 
+    #         "num_bins": 8, 
+    #     }
+    # }
     
-    flowmc_hyperparameters = HYPERPARAMETERS["flowmc"]
-    jim_hyperparameters = HYPERPARAMETERS["jim"]
-    hyperparameters = {**flowmc_hyperparameters, **jim_hyperparameters}
+    # flowmc_hyperparameters = HYPERPARAMETERS["flowmc"]
+    # jim_hyperparameters = HYPERPARAMETERS["jim"]
+    # hyperparameters = {**flowmc_hyperparameters, **jim_hyperparameters}
     
-    for key, value in args.__dict__.items():
-        if key in hyperparameters:
-            hyperparameters[key] = value
+    # for key, value in args.__dict__.items():
+    #     if key in hyperparameters:
+    #         hyperparameters[key] = value
             
     ### POLYNOMIAL SCHEDULER
     if args.use_scheduler:
         print("Using polynomial learning rate scheduler")
-        total_epochs = hyperparameters["n_epochs"] * hyperparameters["n_loop_training"]
+        total_epochs = args.["n_epochs"] * args.["n_loop_training"]
         start = int(total_epochs / 10)
         start_lr = 1e-3
         end_lr = 1e-5
         power = 4.0
         schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
-        hyperparameters["learning_rate"] = schedule_fn
+        args.learning_rate = schedule_fn
+        scheduler_string = f"Polynomial scheduler: start_lr = {start_lr}, end_lr = {end_lr}, power = {power}, start = {start}"
 
     print(f"Saving output to {args.outdir}")
     
@@ -347,6 +246,10 @@ def body(args):
     print("L1 SNR:", l1_snr)
     print("V1 SNR:", v1_snr)
     print("Network SNR:", network_snr)
+    
+    print(f"Saving network SNR")
+    with open(outdir + 'network_snr.txt', 'w') as file:
+        file.write(str(network_snr))
 
     print("Start prior setup")
     
@@ -442,18 +345,18 @@ def body(args):
     for idx, prior in enumerate(prior_list):
         mass_matrix = mass_matrix.at[idx, idx].set(prior.xmax - prior.xmin) # fetch the prior range
     local_sampler_arg = {'step_size': mass_matrix * args.eps_mass_matrix} # set the overall step size
-    hyperparameters["local_sampler_arg"] = local_sampler_arg
+    args.local_sampler_arg = local_sampler_arg
     
     # Create jim object
     jim = Jim(
         likelihood, 
         complete_prior,
         nf_lr_autotune = True,
-        **hyperparameters
+        **args.__dict__
     )
     
     if args.smart_initial_guess:
-        n_chains = hyperparameters["n_chains"]
+        n_chains = args["n_chains"]
         n_dim = len(prior_list)
         initial_guess = utils.generate_smart_initial_guess(gmst, [H1, L1, V1], true_param, n_chains, n_dim, prior_low, prior_high)
         # Plot it
@@ -509,11 +412,17 @@ def body(args):
     name = outdir + 'results_NF.npz'
     chains = jim.Sampler.sample_flow(10_000)
     np.savez(name, chains = chains)
+    utils.plot_chains(chains, "chains_NF", outdir, truths = truths)
+    
+    ### Final steps
     
     # Finally, copy over this script to the outdir for reproducibility
     shutil.copy2(__file__, outdir + "copy_injection_recovery.py")
     
     print("Saving the jim hyperparameters")
+    # Change scheduler from function to a string representation
+    if args.use_scheduler:
+        jim.Sampler.hyperparameters["learning_rate"] = scheduler_string
     jim.save_hyperparameters(outdir = outdir)
     
     end_time = time.time()
@@ -532,10 +441,9 @@ def body(args):
 
 def main(given_args = None):
     
-    parser = get_parser()
+    # Get the parser
+    parser = utils.get_parser()
     args = parser.parse_args()
-    
-    print(given_args)
     
     # Update with given args
     if given_args is not None:
@@ -544,11 +452,11 @@ def main(given_args = None):
     if args.load_existing_config and args.N == "":
         raise ValueError("If load_existing_config is True, you need to specify the N argument to locate the existing injection. ")
     
-    print("------------------------------------")
+    print("------------------------------------------------")
     print("Arguments script:")
     for key, value in args.__dict__.items():
         print(f"{key}: {value}")
-    print("------------------------------------")
+    print("------------------------------------------------")
         
     print("Starting main code")
     
@@ -556,12 +464,6 @@ def main(given_args = None):
     if len(args.N) == 0:
         N = utils.get_N(args.outdir)
         args.N = N
-    
-    # TODO fix that os uses these
-    # import os
-    # os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
-    # os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
-    # print(f"Running on GPU {args.GPU_device}")
     
     # Execute the script
     body(args)
