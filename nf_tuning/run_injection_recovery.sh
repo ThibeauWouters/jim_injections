@@ -1,4 +1,5 @@
 python injection_recovery.py \
     --load-existing-config True \
     --outdir ./outdir/ \
-    --N 8
+    --relative-binning-binsize 500 \
+    --N 7

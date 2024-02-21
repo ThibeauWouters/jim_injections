@@ -1,6 +1,6 @@
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.4"
 import numpy as np
 import argparse
 # The following is needed on CIT cluster to avoid an obscure Python error
@@ -163,7 +163,7 @@ def body(args):
         - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
     """
     
-    start = time.time()
+    start_time = time.time()
     # TODO move and get these as arguments
     # Deal with the hyperparameters
     naming = NAMING
@@ -217,7 +217,7 @@ def body(args):
         start = int(total_epochs / 10)
         start_lr = 1e-3
         end_lr = 1e-5
-        power = 3.0
+        power = 4.0
         schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
         hyperparameters["learning_rate"] = schedule_fn
 
@@ -231,8 +231,12 @@ def body(args):
     
     if args.waveform_approximant == "TaylorF2":
         ripple_waveform_fn = RippleTaylorF2
-    elif args.waveform_approximant == "TaylorF2":
+    elif args.waveform_approximant == "IMRPhenomD_NRTidalv2":
         ripple_waveform_fn = RippleIMRPhenomD_NRTidalv2
+        # NOTE we are going to disable the local sampler for now when using NRTv2 (possible bug in jax.grad?)
+        hyperparameters["use_local"] = False
+    else:
+        raise ValueError(f"Something went wrong with initializing waveform approximant function.")
 
     # Before main code, check if outdir is correct dir format TODO improve with sys?
     if args.outdir[-1] != "/":
@@ -516,8 +520,8 @@ def body(args):
     print("Saving the jim hyperparameters")
     jim.save_hyperparameters(outdir = outdir)
     
-    end = time.time()
-    runtime = end - start
+    end_time = time.time()
+    runtime = end_time - start_time
     print(f"Time taken: {runtime} seconds ({(runtime)/60} minutes)")
     
     print(f"Saving runtime")

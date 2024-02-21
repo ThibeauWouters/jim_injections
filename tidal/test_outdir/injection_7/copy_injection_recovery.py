@@ -1,10 +1,14 @@
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
+import numpy as np
+import argparse
 # The following is needed on CIT cluster to avoid an obscure Python error
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
 # Regular imports 
 import argparse
-import os
 import copy
 import numpy as np
 from astropy.time import Time
@@ -17,9 +21,11 @@ import jax.numpy as jnp
 from jimgw.jim import Jim
 from jimgw.single_event.detector import H1, L1, V1
 from jimgw.single_event.likelihood import HeterodynedTransientLikelihoodFD, TransientLikelihoodFD
-from jimgw.single_event.waveform import RippleTaylorF2
+from jimgw.single_event.waveform import RippleTaylorF2, RippleIMRPhenomD_NRTidalv2
 from jimgw.prior import Uniform, Composite
 import utils # our plotting and postprocessing utilities script
+
+import optax
 
 # Names of the parameters and their ranges for sampling parameters for the injection
 NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
@@ -52,18 +58,19 @@ def get_parser(**kwargs):
         description="Perform an injection recovery.",
         add_help=add_help,
     )
-    parser.add_argument(
-        "--GPU-device",
-        type=int,
-        default=0,
-        help="Select GPU index to use.",
-    )
-    parser.add_argument(
-        "--GPU-memory-fraction",
-        type=float,
-        default=0.5,
-        help="Select percentage of GPU memory to use.",
-    )
+    # TODO os does not use them
+    # parser.add_argument(
+    #     "--GPU-device",
+    #     type=int,
+    #     default=0,
+    #     help="Select GPU index to use.",
+    # )
+    # parser.add_argument(
+    #     "--GPU-memory-fraction",
+    #     type=float,
+    #     default=0.5,
+    #     help="Select percentage of GPU memory to use.",
+    # )
     parser.add_argument(
         "--outdir",
         type=str,
@@ -73,7 +80,7 @@ def get_parser(**kwargs):
     parser.add_argument(
         "--load-existing-config",
         type=bool,
-        default=True,
+        default=False,
         help="Whether to load and redo an existing injection (True) or to generate a new set of parameters (False).",
     )
     parser.add_argument(
@@ -124,6 +131,18 @@ def get_parser(**kwargs):
         default=False,
         help="Distribute the walkers around the injected parameters. TODO change this to reference parameters found by the relative binning code.",
     )
+    parser.add_argument(
+        "--use-scheduler",
+        type=bool,
+        default=True,
+        help="Use a learning rate scheduler instead of a fixed learning rate.",
+    )
+    parser.add_argument(
+        "--stopping-criterion-global-acc",
+        type=float,
+        default=1.0,
+        help="Stop the run once we reach this global acceptance rate.",
+    )
     # # TODO this has to be implemented
     # parser.add_argument(
     #     "--autotune_local_sampler",
@@ -144,6 +163,7 @@ def body(args):
         - flowMC hyperparameters: https://github.com/ThibeauWouters/flowMC/blob/ad1a32dcb6984b2e178d7204a53d5da54b578073/src/flowMC/sampler/Sampler.py#L40
     """
     
+    start_time = time.time()
     # TODO move and get these as arguments
     # Deal with the hyperparameters
     naming = NAMING
@@ -151,25 +171,26 @@ def body(args):
     "flowmc": 
         {
             "n_loop_training": 400,
-            "n_loop_production": 30,
+            "n_loop_production": 50,
             "n_local_steps": 5,
-            "n_global_steps": 100,
-            "n_epochs": 100,
+            "n_global_steps": 400,
+            "n_epochs": 50,
             "n_chains": 1000, 
-            "learning_rate": 0.001, 
+            "learning_rate": 0.001, # using a scheduler below
             "max_samples": 50000, 
             "momentum": 0.9, 
             "batch_size": 50000, 
             "use_global": True, 
             "logging": True, 
-            "keep_quantile": 0.5, 
+            "keep_quantile": 0.0, 
             "local_autotune": None, 
             "train_thinning": 10, 
             "output_thinning": 30, 
             "n_sample_max": 10000, 
             "precompile": False, 
             "verbose": False, 
-            "outdir": args.outdir
+            "outdir": args.outdir,
+            "stopping_criterion_global_acc": args.stopping_criterion_global_acc
         }, 
     "jim": 
         {
@@ -188,25 +209,38 @@ def body(args):
     for key, value in args.__dict__.items():
         if key in hyperparameters:
             hyperparameters[key] = value
-
-    os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
-    print(f"Running on GPU {args.GPU_device}")
+            
+    ### POLYNOMIAL SCHEDULER
+    if args.use_scheduler:
+        print("Using polynomial learning rate scheduler")
+        total_epochs = hyperparameters["n_epochs"] * hyperparameters["n_loop_training"]
+        start = int(total_epochs / 10)
+        start_lr = 1e-3
+        end_lr = 1e-5
+        power = 4.0
+        schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
+        hyperparameters["learning_rate"] = schedule_fn
 
     print(f"Saving output to {args.outdir}")
+    
+    # Fetch waveform used
+    supported_waveforms = ["TaylorF2", "NRTidalv2", "IMRPhenomD_NRTidalv2"]
+    if args.waveform_approximant not in supported_waveforms:
+        print(f"Waveform approximant {args.waveform_approximant} not supported. Supported waveforms are {supported_waveforms}. Changing to TaylorF2.")
+        args.waveform_approximant = "TaylorF2"
+    
     if args.waveform_approximant == "TaylorF2":
         ripple_waveform_fn = RippleTaylorF2
+    elif args.waveform_approximant == "IMRPhenomD_NRTidalv2":
+        ripple_waveform_fn = RippleIMRPhenomD_NRTidalv2
     else:
-        raise ValueError("The waveform approximant is not recognized")
+        raise ValueError(f"Something went wrong with initializing waveform approximant function.")
 
     # Before main code, check if outdir is correct dir format TODO improve with sys?
     if args.outdir[-1] != "/":
         args.outdir += "/"
 
     outdir = f"{args.outdir}injection_{args.N}/"
-    # Save the given script hyperparams
-    with open(f"{outdir}script_args.json", 'w') as json_file:
-        json.dump(args.__dict__, json_file)
     
     # Get the prior bounds, both as 1D and 2D arrays
     prior_ranges = jnp.array([PRIOR[name] for name in naming])
@@ -228,9 +262,13 @@ def body(args):
         
         key = jax.random.PRNGKey(config["seed"])
         
+        # Save the given script hyperparams
+        with open(f"{outdir}script_args.json", 'w') as json_file:
+            json.dump(args.__dict__, json_file)
+        
         # Start injections
         print("Injecting signals . . .")
-        waveform = ripple_waveform_fn(f_ref = config["fmin"])
+        waveform = ripple_waveform_fn(f_ref = config["fref"])
         
         # Create frequency grid
         freqs = jnp.arange(
@@ -412,6 +450,7 @@ def body(args):
     jim = Jim(
         likelihood, 
         complete_prior,
+        nf_lr_autotune = True,
         **hyperparameters
     )
     
@@ -449,11 +488,8 @@ def body(args):
     utils.plot_accs(local_accs, "Local accs (training)", "local_accs_training", outdir)
     utils.plot_accs(global_accs, "Global accs (training)", "global_accs_training", outdir)
     utils.plot_loss_vals(loss_vals, "Loss", "loss_vals", outdir)
+    utils.plot_log_prob(log_prob, "Log probability (training)", "log_prob_training", outdir)
     
-    # TODO for testing and checking memory usage accs
-    name = outdir + f'results_training_no_accs.npz'
-    np.savez(name, log_prob=log_prob, loss_vals=loss_vals)
-        
     #  - production phase
     name = outdir + f'results_production.npz'
     state = jim.Sampler.get_sampler_state(training = False)
@@ -464,12 +500,10 @@ def body(args):
 
     utils.plot_accs(local_accs, "Local accs (production)", "local_accs_production", outdir)
     utils.plot_accs(global_accs, "Global accs (production)", "global_accs_production", outdir)
+    utils.plot_log_prob(log_prob, "Log probability (production)", "log_prob_production", outdir)
 
     # Plot the chains as corner plots
     utils.plot_chains(chains, "chains_production", outdir, truths = truths)
-    
-    print("Saving the jim hyperparameters")
-    jim.save_hyperparameters(outdir = outdir)
     
     # Save the NF and show a plot of samples from the flow
     print("Saving the NF")
@@ -480,6 +514,17 @@ def body(args):
     
     # Finally, copy over this script to the outdir for reproducibility
     shutil.copy2(__file__, outdir + "copy_injection_recovery.py")
+    
+    print("Saving the jim hyperparameters")
+    jim.save_hyperparameters(outdir = outdir)
+    
+    end_time = time.time()
+    runtime = end_time - start_time
+    print(f"Time taken: {runtime} seconds ({(runtime)/60} minutes)")
+    
+    print(f"Saving runtime")
+    with open(outdir + 'runtime.txt', 'w') as file:
+        file.write(str(runtime))
     
     print("Finished injection recovery successfully!")
 
@@ -500,7 +545,7 @@ def main(given_args = None):
         
     if args.load_existing_config and args.N == "":
         raise ValueError("If load_existing_config is True, you need to specify the N argument to locate the existing injection. ")
-        
+    
     print("------------------------------------")
     print("Arguments script:")
     for key, value in args.__dict__.items():
@@ -509,14 +554,19 @@ def main(given_args = None):
         
     print("Starting main code")
     
+    # If no N is given, fetch N from the structure of outdir
     if len(args.N) == 0:
         N = utils.get_N(args.outdir)
         args.N = N
     
-    start = time.time()
+    # TODO fix that os uses these
+    # import os
+    # os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = str(args.GPU_memory_fraction)
+    # os.environ['CUDA_VISIBLE_DEVICES'] = str(args.GPU_device)
+    # print(f"Running on GPU {args.GPU_device}")
+    
+    # Execute the script
     body(args)
-    end = time.time()
-    print(f"Time taken: {end-start} seconds ({(end-start)/60} minutes)")
     
 if __name__ == "__main__":
     main()
