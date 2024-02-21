@@ -12,15 +12,15 @@ import shutil
 import time
 from astropy.time import Time
 import argparse
-import psutil
 import numpy as np
 import copy
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
+# os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+# os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
 # The following is needed on CIT cluster to avoid an obscure Python error
-p = psutil.Process()
-p.cpu_affinity([0])
+# import psutil
+# p = psutil.Process()
+# p.cpu_affinity([0])
 # Regular imports
 jax.config.update("jax_enable_x64", True)
 
@@ -271,6 +271,10 @@ def body(args):
     print(f"Saving network SNR")
     with open(outdir + 'network_snr.txt', 'w') as file:
         file.write(str(network_snr))
+        
+    for name, ifo in zip(["H1", "L1", "V1"], ifos):
+        print(f"Saving injected signal as Numpy arrays for {name}")
+        np.savez(f"{outdir}{name}_data.npz", freqs=ifo.frequencies, data=ifo.data)
 
     print("Start prior setup")
 

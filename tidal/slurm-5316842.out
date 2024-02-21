@@ -1,0 +1,251 @@
+find: '': No such file or directory
+New number: 1
+/gpfs/home6/twouters2/jim/src/jimgw/single_event/detector.py:410: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  def load_psd(
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:94: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class Uniform(Prior):
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:149: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class Unconstrained_Uniform(Prior):
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:278: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class AlignedSpin(Prior):
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:392: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class PowerLaw(Prior):
+------------------------------------------------
+Arguments script:
+outdir: /scratch-local/twouters2.5316842
+load_existing_config: False
+N: 
+SNR_threshold: 12
+waveform_approximant: TaylorF2
+relative_binning_binsize: 500
+relative_binning_ref_params_equal_true_params: True
+save_training_chains: False
+eps_mass_matrix: 0.0001
+smart_initial_guess: False
+use_scheduler: True
+stopping_criterion_global_acc: 0.1
+n_loop_training: 2
+n_loop_production: 2
+n_local_steps: 100
+n_global_steps: 400
+n_epochs: 50
+n_chains: 1000
+learning_rate: 0.001
+max_samples: 50000
+momentum: 0.9
+batch_size: 50000
+use_global: True
+logging: True
+keep_quantile: 0.0
+local_autotune: None
+train_thinning: 10
+output_thinning: 30
+n_sample_max: 10000
+precompile: False
+verbose: False
+num_layers: 10
+hidden_size: [128, 128]
+num_bins: 8
+------------------------------------------------
+Starting main code
+Using polynomial learning rate scheduler
+Saving output to /scratch-local/twouters2.5316842
+The SNR threshold parameter is set to 12
+Generating new config
+Made injection directory:  /scratch-local/twouters2.5316842/injection_2/
+Injection directory exists:  /scratch-local/twouters2.5316842/injection_2/
+Injecting signals . . .
+The injected parameters are {'M_c': 1.4875754737410274, 'eta': 0.24874798354864214, 's1_z': -0.015196565337520576, 's2_z': 0.047217224334917, 'lambda_1': 2838.0623883819244, 'lambda_2': 2431.950399983695, 'd_L': 134.2020287257916, 't_c': -0.07561173385893288, 'phase_c': 4.486726902563082, 'iota': 0.9406002243612418, 'psi': 1.3400358153092444, 'ra': 1.2445396310073378, 'dec': -0.2948785078299516}
+Signal injected
+H1 SNR: 11.279273048077815
+L1 SNR: 14.876391973335148
+V1 SNR: 5.028485100111325
+Network SNR: 19.334288221691708
+Saving network SNR
+Saving injected signal as Numpy arrays for H1
+Saving injected signal as Numpy arrays for L1
+Saving injected signal as Numpy arrays for V1
+Start prior setup
+Saving prior bounds
+Finished prior setup
+Initializing likelihood
+Using the true parameters as reference parameters for the relative binning
+Initializing heterodyned likelihood..
+Finding reference parameters..
+Using provided reference parameters
+Constructing reference waveforms..
+No autotune found, use input sampler_params
+Training normalizing flow
+Tuning global sampler:   0%|          | 0/2 [00:00<?, ?it/s]Tuning global sampler:  50%|█████     | 1/2 [02:39<02:39, 159.08s/it]Tuning global sampler: 100%|██████████| 2/2 [02:45<00:00, 69.13s/it] Tuning global sampler: 100%|██████████| 2/2 [02:45<00:00, 82.62s/it]
+Starting Production run
+Production run:   0%|          | 0/2 [00:00<?, ?it/s]Production run:  50%|█████     | 1/2 [00:02<00:02,  2.21s/it]Production run: 100%|██████████| 2/2 [00:04<00:00,  2.19s/it]Production run: 100%|██████████| 2/2 [00:04<00:00,  2.19s/it]
+Training summary
+==========
+M_c: 1.403 +/- 0.437
+eta: 0.242 +/- 0.008
+s1_z: 0.000 +/- 0.029
+s2_z: 0.001 +/- 0.028
+lambda_1: 2424.818 +/- 1404.081
+lambda_2: 2489.787 +/- 1445.550
+d_L: 231.834 +/- 56.364
+t_c: -0.001 +/- 0.057
+phase_c: 3.172 +/- 1.749
+iota: 1.571 +/- 0.332
+psi: 1.541 +/- 0.857
+ra: 3.130 +/- 1.705
+dec: -0.027 +/- 0.609
+Log probability: -91.559 +/- 537.900
+Local acceptance: 0.363 +/- 0.481
+Global acceptance: 0.021 +/- 0.142
+Max loss: 22.815, Min loss: 17.063
+Production summary
+==========
+M_c: 1.333 +/- 0.392
+eta: 0.242 +/- 0.008
+s1_z: 0.000 +/- 0.029
+s2_z: 0.001 +/- 0.028
+lambda_1: 2401.212 +/- 1400.152
+lambda_2: 2484.927 +/- 1416.405
+d_L: 244.091 +/- 43.331
+t_c: -0.002 +/- 0.057
+phase_c: 3.142 +/- 1.755
+iota: 1.568 +/- 0.227
+psi: 1.536 +/- 0.861
+ra: 3.108 +/- 1.688
+dec: -0.049 +/- 0.604
+Log probability: -19.277 +/- 4.155
+Local acceptance: 0.282 +/- 0.450
+Global acceptance: 0.005 +/- 0.068
+Saving samples to /scratch-local/twouters2.5316842/injection_2/results_training.npz
+Saving the NF
+Saving the jim hyperparameters
+Time taken: 340.79744362831116 seconds (5.679957393805186 minutes)
+Saving runtime
+Finished injection recovery successfully!
+Copying to: /home/twouters2/jim_injections/tidal/new_slurm/injection_1
+Finally, copying the output file
+DONE
+
+JOB STATISTICS
+==============
+Job ID: 5316842
+Cluster: snellius
+User/Group: twouters2/twouters2
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:06:08
+CPU Efficiency: 5.66% of 01:48:18 core-walltime
+Job Wall-clock time: 00:06:01
+Memory Utilized: 4.12 GB
+Memory Efficiency: 20.62% of 20.00 GB

@@ -1,0 +1,241 @@
+Running injection number: 14
+/gpfs/home6/twouters2/jim/src/jimgw/single_event/detector.py:410: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  def load_psd(
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:94: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class Uniform(Prior):
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:149: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class Unconstrained_Uniform(Prior):
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:278: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class AlignedSpin(Prior):
+/gpfs/home6/twouters2/jim/src/jimgw/prior.py:392: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
+```
+from jaxtyping import jaxtyped
+# Use your favourite typechecker: usually one of the two lines below.
+from typeguard import typechecked as typechecker
+from beartype import beartype as typechecker
+
+@jaxtyped(typechecker=typechecker)
+def foo(...):
+```
+and the old double-decorator syntax
+```
+@jaxtyped
+@typechecker
+def foo(...):
+```
+should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
+In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
+```
+@jaxtyped(typechecker)
+def foo(...):
+```
+
+  class PowerLaw(Prior):
+------------------------------------------------
+Arguments script:
+outdir: /scratch-local/twouters2.5317091
+load_existing_config: False
+N: 14
+SNR_threshold: 12
+waveform_approximant: TaylorF2
+relative_binning_binsize: 500
+relative_binning_ref_params_equal_true_params: True
+save_training_chains: False
+eps_mass_matrix: 0.0001
+smart_initial_guess: False
+use_scheduler: True
+stopping_criterion_global_acc: 0.1
+n_loop_training: 2
+n_loop_production: 2
+n_local_steps: 100
+n_global_steps: 400
+n_epochs: 50
+n_chains: 1000
+learning_rate: 0.001
+max_samples: 50000
+momentum: 0.9
+batch_size: 50000
+use_global: True
+logging: True
+keep_quantile: 0.0
+local_autotune: None
+train_thinning: 10
+output_thinning: 30
+n_sample_max: 10000
+precompile: False
+verbose: False
+num_layers: 10
+hidden_size: [128, 128]
+num_bins: 8
+------------------------------------------------
+Starting main code
+Using polynomial learning rate scheduler
+Saving output to /scratch-local/twouters2.5317091
+The SNR threshold parameter is set to 12
+Generating new config
+Injection directory exists:  /scratch-local/twouters2.5317091/injection_14/
+Injecting signals . . .
+The injected parameters are {'M_c': 1.525173349717081, 'eta': 0.22457181214355565, 's1_z': 0.014954439173183454, 's2_z': -0.03489604500855917, 'lambda_1': 4525.851051623257, 'lambda_2': 2137.0769295115183, 'd_L': 284.27665646688916, 't_c': -0.022249087654163516, 'phase_c': 3.6399711913764494, 'iota': 1.1911480489363833, 'psi': 0.38314317870778164, 'ra': 5.1478910531371485, 'dec': 0.9260230586555864}
+Signal injected
+Network SNR is less than 12, generating new parameters
+Generating new config
+Injection directory exists:  /scratch-local/twouters2.5317091/injection_14/
+Injecting signals . . .
+The injected parameters are {'M_c': 1.0840164821019675, 'eta': 0.24910084670697652, 's1_z': 0.010696030481690669, 's2_z': 0.017015399625824684, 'lambda_1': 2008.8275090744, 'lambda_2': 1633.644604186893, 'd_L': 104.9239153293041, 't_c': 0.0507100502790849, 'phase_c': 1.8097697793763055, 'iota': 1.8681673530352783, 'psi': 0.6952339463620414, 'ra': 3.0946016302622525, 'dec': -1.0918887515120055}
+Signal injected
+H1 SNR: 10.219039672529156
+L1 SNR: 6.830568156185949
+V1 SNR: 3.7445470492579953
+Network SNR: 12.849399432235465
+Saving network SNR
+Saving injected signal as Numpy arrays for H1
+Saving injected signal as Numpy arrays for L1
+Saving injected signal as Numpy arrays for V1
+Start prior setup
+Saving prior bounds
+Finished prior setup
+Initializing likelihood
+Using the true parameters as reference parameters for the relative binning
+Initializing heterodyned likelihood..
+Finding reference parameters..
+Using provided reference parameters
+Constructing reference waveforms..
+No autotune found, use input sampler_params
+Training normalizing flow
+Tuning global sampler:   0%|          | 0/2 [00:00<?, ?it/s]Tuning global sampler:  50%|█████     | 1/2 [02:40<02:40, 160.59s/it]Tuning global sampler: 100%|██████████| 2/2 [02:46<00:00, 69.72s/it] Tuning global sampler: 100%|██████████| 2/2 [02:46<00:00, 83.35s/it]
+Starting Production run
+Production run:   0%|          | 0/2 [00:00<?, ?it/s]Production run:  50%|█████     | 1/2 [00:02<00:02,  2.22s/it]Production run: 100%|██████████| 2/2 [00:04<00:00,  2.19s/it]Production run: 100%|██████████| 2/2 [00:04<00:00,  2.19s/it]
+Training summary
+==========
+M_c: 1.379 +/- 0.429
+eta: 0.242 +/- 0.008
+s1_z: 0.000 +/- 0.028
+s2_z: 0.001 +/- 0.028
+lambda_1: 2479.466 +/- 1399.853
+lambda_2: 2435.150 +/- 1439.504
+d_L: 232.629 +/- 55.930
+t_c: 0.001 +/- 0.056
+phase_c: 3.211 +/- 1.726
+iota: 1.566 +/- 0.323
+psi: 1.561 +/- 0.860
+ra: 3.226 +/- 1.722
+dec: 0.001 +/- 0.612
+Log probability: -92.592 +/- 540.674
+Local acceptance: 0.378 +/- 0.485
+Global acceptance: 0.021 +/- 0.143
+Max loss: 22.815, Min loss: 17.077
+Production summary
+==========
+M_c: 1.287 +/- 0.383
+eta: 0.242 +/- 0.008
+s1_z: -0.001 +/- 0.028
+s2_z: -0.001 +/- 0.028
+lambda_1: 2470.347 +/- 1396.383
+lambda_2: 2484.392 +/- 1433.989
+d_L: 245.188 +/- 42.772
+t_c: 0.001 +/- 0.056
+phase_c: 3.246 +/- 1.740
+iota: 1.572 +/- 0.197
+psi: 1.575 +/- 0.876
+ra: 3.253 +/- 1.732
+dec: 0.001 +/- 0.621
+Log probability: -20.722 +/- 2.711
+Local acceptance: 0.311 +/- 0.463
+Global acceptance: 0.005 +/- 0.073
+Saving samples to /scratch-local/twouters2.5317091/injection_14/results_training.npz
+Saving the NF
+Saving the jim hyperparameters
+Time taken: 344.50528955459595 seconds (5.741754825909933 minutes)
+Saving runtime
+Finished injection recovery successfully!
+Copying to: /home/twouters2/jim_injections/tidal/new_slurm/injection_14
+Finally, moving the output file
+DONE
