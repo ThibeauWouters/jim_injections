@@ -1,7 +1,7 @@
 # The following is needed on CIT cluster to avoid an obscure Python error
 import os
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
 os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
@@ -77,7 +77,7 @@ def get_parser(**kwargs):
     parser.add_argument(
         "--load-existing-config",
         type=bool,
-        default=True,
+        default=False,
         help="Whether to load and redo an existing injection (True) or to generate a new set of parameters (False).",
     )
     parser.add_argument(
@@ -154,8 +154,8 @@ def body(args):
     HYPERPARAMETERS = {
     "flowmc": 
         {
-            "n_loop_training": 400,
-            "n_loop_production": 30,
+            "n_loop_training": 2,
+            "n_loop_production": 2,
             "n_local_steps": 5,
             "n_global_steps": 400,
             "n_epochs": 50,
@@ -193,17 +193,14 @@ def body(args):
         if key in hyperparameters:
             hyperparameters[key] = value
             
-    # schedule_fn = optax.warmup_cosine_decay_schedule(1e-5, 1e-2, 10, hyperparameters["n_epochs"], end_value=1e-4, exponent=1.0)
+    ### POLYNOMIAL SCHEDULER
     total_epochs = hyperparameters["n_epochs"] * hyperparameters["n_loop_training"]
     start = int(total_epochs / 10)
-   
-    # ### POLYNOMIAL SCHEDULER
-    # # TODO save a plot of the schedule?
-    # start_lr = 1e-2
-    # end_lr = 1e-4
-    # power = 2.0
-    # schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
-    # hyperparameters["learning_rate"] = schedule_fn
+    start_lr = 1e-3
+    end_lr = 1e-5
+    power = 3.0
+    schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
+    hyperparameters["learning_rate"] = schedule_fn
 
     print(f"Saving output to {args.outdir}")
     if args.waveform_approximant == "TaylorF2":

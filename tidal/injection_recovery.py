@@ -1,6 +1,6 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "3"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.4"
 import numpy as np
 # The following is needed on CIT cluster to avoid an obscure Python error
 import psutil
@@ -130,8 +130,12 @@ def body(args):
     
     if args.waveform_approximant == "TaylorF2":
         ripple_waveform_fn = RippleTaylorF2
-    elif args.waveform_approximant == "TaylorF2":
+    elif args.waveform_approximant == "IMRPhenomD_NRTidalv2":
         ripple_waveform_fn = RippleIMRPhenomD_NRTidalv2
+        # NOTE we are going to disable the local sampler for now when using NRTv2 (possible bug in jax.grad?)
+        hyperparameters["use_local"] = False
+    else:
+        raise ValueError(f"Something went wrong with initializing waveform approximant function.")
 
     # Before main code, check if outdir is correct dir format TODO improve with sys?
     if args.outdir[-1] != "/":

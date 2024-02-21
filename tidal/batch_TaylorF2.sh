@@ -7,7 +7,7 @@ num_times=100
 for ((i=1; i<=$num_times; i++)); do
     echo "===== Iteration $i ====="
     python injection_recovery.py \
-        --outdir ./outdir_TaylorF2_part2/ \
+        --outdir ./outdir_TaylorF2/ \
         --stopping-criterion-global-acc 0.20 \
         --waveform-approximant TaylorF2 \
         --relative-binning-binsize 500

@@ -1,7 +1,7 @@
 # The following is needed on CIT cluster to avoid an obscure Python error
 import os
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.75"
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
+os.environ['CUDA_VISIBLE_DEVICES'] = "0"
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
@@ -23,7 +23,7 @@ from jimgw.single_event.waveform import RippleTaylorF2
 from jimgw.prior import Uniform, Composite
 import utils # our plotting and postprocessing utilities script
 
-import optax
+# import optax
 
 # Names of the parameters and their ranges for sampling parameters for the injection
 NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
@@ -154,8 +154,8 @@ def body(args):
     HYPERPARAMETERS = {
     "flowmc": 
         {
-            "n_loop_training": 400,
-            "n_loop_production": 30,
+            "n_loop_training": 2,
+            "n_loop_production": 2,
             "n_local_steps": 5,
             "n_global_steps": 400,
             "n_epochs": 50,
@@ -197,14 +197,13 @@ def body(args):
     total_epochs = hyperparameters["n_epochs"] * hyperparameters["n_loop_training"]
     start = int(total_epochs / 10)
    
-    ### POLYNOMIAL SCHEDULER
-    start_lr = 1e-3
-    end_lr = 1e-5
-    power = 3.0
-    schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
-    
-    # Change to the scheduler HERE
-    hyperparameters["learning_rate"] = schedule_fn
+    # ### POLYNOMIAL SCHEDULER
+    # # TODO save a plot of the schedule?
+    # start_lr = 1e-2
+    # end_lr = 1e-4
+    # power = 2.0
+    # schedule_fn = optax.polynomial_schedule(start_lr, end_lr, power, total_epochs-start, transition_begin=start)
+    # hyperparameters["learning_rate"] = schedule_fn
 
     print(f"Saving output to {args.outdir}")
     if args.waveform_approximant == "TaylorF2":
@@ -425,6 +424,7 @@ def body(args):
     jim = Jim(
         likelihood, 
         complete_prior,
+        nf_lr_autotune = True,
         **hyperparameters
     )
     
@@ -462,6 +462,7 @@ def body(args):
     utils.plot_accs(local_accs, "Local accs (training)", "local_accs_training", outdir)
     utils.plot_accs(global_accs, "Global accs (training)", "global_accs_training", outdir)
     utils.plot_loss_vals(loss_vals, "Loss", "loss_vals", outdir)
+    utils.plot_log_prob(log_prob, "Log probability (training)", "log_prob_training", outdir)
     
     # TODO for testing and checking memory usage accs
     name = outdir + f'results_training_no_accs.npz'
@@ -477,6 +478,7 @@ def body(args):
 
     utils.plot_accs(local_accs, "Local accs (production)", "local_accs_production", outdir)
     utils.plot_accs(global_accs, "Global accs (production)", "global_accs_production", outdir)
+    utils.plot_log_prob(log_prob, "Log probability (production)", "log_prob_production", outdir)
 
     # Plot the chains as corner plots
     utils.plot_chains(chains, "chains_production", outdir, truths = truths)
