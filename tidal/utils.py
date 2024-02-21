@@ -47,6 +47,7 @@ matplotlib_params = {"axes.grid": True,
 
 plt.rcParams.update(matplotlib_params)
 
+labels = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda$', r'$\delta\Lambda$', r'$d_{\rm{L}}/{\rm Mpc}$', r'$t_c$', r'$\phi_c$', r'$\iota$', r'$\psi$', r'$\alpha$', r'$\delta$']
 
 ############################################
 ### Injection recovery utility functions ###
@@ -322,12 +323,6 @@ def generate_smart_initial_guess(gmst,
 ### PLOTTING ###
 ################
 
-labels_results_plot = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda_1$', r'$\Lambda_2$', r'$d_{\rm{L}}/{\rm Mpc}$',
-            r'$t_c$', r'$\phi_c$', r'$\iota$', r'$\psi$', r'$\alpha$', r'$\delta$']
-
-labels_with_tc = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda$', r'$\delta\Lambda$', r'$d_{\rm{L}}/{\rm Mpc}$',
-               r'$t_c$', r'$\phi_c$', r'$\iota$', r'$\psi$', r'$\alpha$', r'$\delta$']
-
 def plot_accs(accs, label, name, outdir):
     
     eps = 1e-3
@@ -351,7 +346,7 @@ def plot_log_prob(log_prob, label, name, outdir):
     plt.close()
 
     
-def plot_chains(chains, name, outdir, truths = None, labels = labels_results_plot):
+def plot_chains(chains, name, outdir, truths = None, labels = labels):
     
     chains = np.array(chains)
     

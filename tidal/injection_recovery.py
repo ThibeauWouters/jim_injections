@@ -452,7 +452,8 @@ def body(args):
     name = outdir + 'results_NF.npz'
     chains = jim.Sampler.sample_flow(10_000)
     np.savez(name, chains=chains)
-    utils.plot_chains(chains, "chains_NF", outdir, truths=truths)
+    # TODO debug this
+    # utils.plot_chains(chains, "chains_NF", outdir, truths=truths)
 
     # Final steps
 

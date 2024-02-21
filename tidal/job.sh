@@ -18,12 +18,12 @@ conda activate jim
 export MY_DIR=$HOME/jim_injections/tidal
 export PSD_DIR=$HOME/jim_injections/tidal/psds
 
-# output dirs
-export OUTPUT_DIR=$MY_DIR/out_slurm/
+# output dir
 export TMPDIR_OUTPUT=$TMPDIR/out_slurm/
  
 # Copy input file and auxiliary files to scratch
 cp $MY_DIR/injection_recovery.py "$TMPDIR"
+cp $MY_DIR/utils.py "$TMPDIR"
 cp -r $PSD_DIR "$TMPDIR"
  
 #Create output directory on scratch
@@ -32,12 +32,16 @@ mkdir $TMPDIR_OUTPUT
 #Execute a Python program located in $HOME, that takes an input file and output directory as arguments.
 python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR_OUTPUT \
-    --n-loop-training 2 \
-    --n-loop-production 2 \
+    --n-local-steps 100 \
+    --eps-mass-matrix 0.01 \
     --stopping-criterion-global-acc 0.20 \
     --waveform-approximant TaylorF2 \
  
 #Copy output directory from scratch to home
-cp -r $TMPDIR_OUTPUT $OUTPUT_DIR
+cp -r "$OUTPUT_DIR" "$MY_DIR"
 
 echo "DONE"
+pwd
+ls -l $TMPDIR_OUTPUT
+
+echo "DONE DONE"
