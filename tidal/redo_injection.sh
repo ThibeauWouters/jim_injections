@@ -3,11 +3,13 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -p gpu
-#SBATCH -t 20:00
+#SBATCH -t 40:00
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-gpu=1
-#SBATCH --mem-per-gpu=20G
+#SBATCH --mem-per-gpu=25G
 
+now=$(date)
+echo "$now"
 # Define dirs
 export MY_DIR=$HOME/jim_injections/tidal
 # Injection number to be ran
@@ -32,18 +34,18 @@ cp -r "$MY_DIR/redo_slurm/injection_$injection_number" "$TMPDIR"
 python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR \
     --N $injection_number \
-    --n-local-steps 100 \
-    --eps-mass-matrix 0.0001 \
+    --n-local-steps 50 \
+    --eps-mass-matrix 0.00001 \
     --stopping-criterion-global-acc 0.20 \
     --waveform-approximant TaylorF2 \
  
-export final_output_dir="$MY_DIR/redo_slurm/injection_$injection_number"
+export final_output_dir="$MY_DIR/redo_slurm/injection_$injection_number$SLURM_JOB_NAME"
 echo "Copying to: $final_output_dir"
 #Copy output directory from scratch to home
-cp -r "$TMPDIR/injection_$injection_number/" $final_output_dir
+cp -r $TMPDIR/injection_$injection_number/* $final_output_dir
 
 # Also copy the output file there
-echo "Finally, moving the output file"
+echo "Finally, moving the output file"s
 mv "$MY_DIR/slurm-$SLURM_JOBID.out" "$final_output_dir/log.out"
 
 echo "DONE"
