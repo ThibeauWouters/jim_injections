@@ -1,0 +1,14 @@
+
+JOB STATISTICS
+==============
+Job ID: 5324089
+Cluster: snellius
+User/Group: twouters2/twouters2
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:18:45
+CPU Efficiency: 4.75% of 06:35:06 core-walltime
+Job Wall-clock time: 00:21:57
+Memory Utilized: 5.07 GB
+Memory Efficiency: 20.30% of 25.00 GB

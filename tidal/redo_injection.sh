@@ -34,14 +34,23 @@ cp -r "$MY_DIR/redo_slurm/injection_$injection_number" "$TMPDIR"
 python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR \
     --N $injection_number \
-    --n-local-steps 50 \
-    --eps-mass-matrix 0.00001 \
+    --load-existing-config True \
+    --n-local-steps-training 200 \
+    --n-local-steps-production 200 \
+    --eps-mass-matrix 0.000005 \
     --stopping-criterion-global-acc 0.20 \
     --waveform-approximant TaylorF2 \
  
 export final_output_dir="$MY_DIR/redo_slurm/injection_$injection_number$SLURM_JOB_NAME"
 echo "Copying to: $final_output_dir"
-#Copy output directory from scratch to home
+
+#Copy output directory from scratch to home, but first check if exists
+if [ -d "$final_output_dir" ]; then
+    echo "Directory already exists: $final_output_dir"
+else
+    mkdir "$final_output_dir"
+    echo "Directory created: $final_output_dir"
+fi
 cp -r $TMPDIR/injection_$injection_number/* $final_output_dir
 
 # Also copy the output file there

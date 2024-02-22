@@ -583,17 +583,42 @@ def get_parser(**kwargs):
         default=50,
         help="Number of production loops"
     )
+    # TODO deprecated, move
+    # parser.add_argument(
+    #     "--n-local-steps",
+    #     type=int,
+    #     default=5,
+    #     help="Number of local steps, used for both training and production"
+    # )
+    # parser.add_argument(
+    #     "--n-global-steps",
+    #     type=int,
+    #     default=400,
+    #     help="Number of global steps, used for both training and production"
+    # )
     parser.add_argument(
-        "--n-local-steps",
+        "--n-local-steps-training",
         type=int,
         default=5,
-        help="Number of local steps"
+        help="Number of local steps used in training"
     )
     parser.add_argument(
-        "--n-global-steps",
+        "--n-global-steps-training",
         type=int,
         default=400,
-        help="Number of global steps"
+        help="Number of global steps used in training"
+    )
+    parser.add_argument(
+        "--n-local-steps-production",
+        type=int,
+        default=5,
+        help="Number of local steps used in training"
+    )
+    parser.add_argument(
+        "--n-global-steps-production",
+        type=int,
+        default=400,
+        help="Number of global steps used in training"
     )
     parser.add_argument(
         "--n-epochs",
@@ -703,6 +728,12 @@ def get_parser(**kwargs):
         type=int,
         default=8,
         help="Number of bins"
+    )
+    parser.add_argument(
+        "--which-local-sampler",
+        type=str,
+        default="MALA",
+        help="Which local sampler to use"
     )
     
     # # TODO this has to be implemented
