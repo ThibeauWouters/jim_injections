@@ -57,55 +57,7 @@ def body(args):
     """
 
     start_time = time.time()
-    # TODO move and get these as arguments
-    # Deal with the hyperparameters
     naming = NAMING
-    # HYPERPARAMETERS = {
-    # "flowmc":
-    #     {
-    #         "n_loop_training": 400,
-    #         "n_loop_production": 50,
-    #         "n_local_steps": 5,
-    #         "n_global_steps": 400,
-    #         "n_epochs": 50,
-    #         "n_chains": 1000,
-    #         "learning_rate": 0.001, # using a scheduler below
-    #         "max_samples": 50000,
-    #         "momentum": 0.9,
-    #         "batch_size": 50000,
-    #         "use_global": True,
-    #         "logging": True,
-    #         "keep_quantile": 0.0,
-    #         "local_autotune": None,
-    #         "train_thinning": 10,
-    #         "output_thinning": 30,
-    #         "n_sample_max": 10000,
-    #         "precompile": False,
-    #         "verbose": False,
-    #         "outdir": args.outdir,
-    #         "stopping_criterion_global_acc": args.stopping_criterion_global_acc,
-    #         "num_layers": 10, # 10
-    #         "hidden_size": [128,128], # [128,128]
-    #         "num_bins": 8, # 8
-
-    #     },
-    # "jim":
-    #     {
-    #         "seed": 0,
-    #         "n_chains": 1000,
-    #         "num_layers": 10,
-    #         "hidden_size": [128, 128],
-    #         "num_bins": 8,
-    #     }
-    # }
-
-    # flowmc_hyperparameters = HYPERPARAMETERS["flowmc"]
-    # jim_hyperparameters = HYPERPARAMETERS["jim"]
-    # hyperparameters = {**flowmc_hyperparameters, **jim_hyperparameters}
-
-    # for key, value in args.__dict__.items():
-    #     if key in hyperparameters:
-    #         hyperparameters[key] = value
 
     # POLYNOMIAL SCHEDULER
     if args.use_scheduler:
@@ -382,7 +334,6 @@ def body(args):
     jim = Jim(
         likelihood,
         complete_prior,
-        nf_lr_autotune=True,
         **args.__dict__
     )
 
