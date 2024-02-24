@@ -124,11 +124,14 @@ def make_pp_plot(credible_level_list: np.array,
         
 if __name__ == "__main__":
     
-    credible_levels, subdirs = utils.get_credible_levels_injections(outdir, return_first=True)
+    credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
+                                                                    return_first=True,
+                                                                    reweigh_distance=True,
+                                                                    one_sided=False)
     make_pp_plot(credible_levels)
     
-    utils.analyze_credible_levels(credible_levels, subdirs, param_index=0)
-    
+    ## Print the credible levels of the different injections for a specific parameter
+    # utils.analyze_credible_levels(credible_levels, subdirs, param_index=0)
     
     # # ### Debugging stuff - plot the samples for a specific parameter as distribution with respect to the true parameter
     # plotkwargs = {"bins": 100, 

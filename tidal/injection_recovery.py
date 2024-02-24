@@ -1,3 +1,11 @@
+import psutil
+p = psutil.Process()
+p.cpu_affinity([0])
+
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = "3"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
+
 import optax
 import utils  # our plotting and postprocessing utilities script
 from jimgw.prior import Uniform, Composite
@@ -15,12 +23,9 @@ import argparse
 import numpy as np
 import copy
 import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-# os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.5"
+
 # The following is needed on CIT cluster to avoid an obscure Python error
-# import psutil
-# p = psutil.Process()
-# p.cpu_affinity([0])
+
 # Regular imports
 jax.config.update("jax_enable_x64", True)
 
@@ -197,7 +202,8 @@ def body(args):
                 h_sky,
                 detector_param,
                 # note: the function load_psd actaully loads the asd
-                psd_file=psd_files[idx]
+                psd_file=psd_files[idx],
+                no_noise=args.no_noise
             )
         print("Signal injected")
 

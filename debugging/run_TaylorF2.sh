@@ -1,4 +1,4 @@
-python compare_likelihoods.py \
+python save_likelihoods.py \
     --outdir ./outdir/ \
     --load-existing-config True \
     --N 14 \

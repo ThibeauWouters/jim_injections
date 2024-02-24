@@ -735,6 +735,12 @@ def get_parser(**kwargs):
         default="MALA",
         help="Which local sampler to use"
     )
+    parser.add_argument(
+        "--no-noise",
+        type=bool,
+        default=False,
+        help="Whether to do no noise injection"
+    )
     
     # # TODO this has to be implemented
     # parser.add_argument(

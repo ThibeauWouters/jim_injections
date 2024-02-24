@@ -308,6 +308,36 @@ def body(args):
         ref_params = None
         print("Will search for reference waveform for relative binning")
 
+    ref_params = [1.95713842e+00,
+     9.10050622e-01,
+     3.40685893e-02,
+     2.72165114e-02,
+     4.94829270e+02,
+     4.37424050e+03,
+     8.21636616e+01,
+     -2.30779116e-02,
+     5.97207208e+00, 
+     -5.23343085e-01,
+     3.02950901e+00,
+     5.98376982e+00,
+     1.28732911e-03]
+    
+    # Print difference with the true params
+    diffs = abs(ref_params - truths)
+    print("diffs")
+    print(diffs)
+    
+    ref_params = jnp.array(ref_params)
+    ref_params = complete_prior.add_name(ref_params)
+    
+    print("ref_params")
+    print(ref_params)
+    
+    ref_params["iota"] = jnp.arccos(ref_params["cos_iota"])
+    ref_params["dec"] = jnp.arcsin(ref_params["sin_dec"])
+    q = ref_params["q"]
+    ref_params["eta"] = q / (1 + q) ** 2
+
     likelihood = HeterodynedTransientLikelihoodFD(
         ifos,
         prior=complete_prior,
@@ -328,7 +358,7 @@ def body(args):
     
     try:
         import pickle
-        with open(f"{outdir}likelihood.pkl", 'wb') as file:
+        with open(f"{outdir}likelihood_ML.pkl", 'wb') as file:
             pickle.dump(likelihood, file)
     except Exception as e:
         print(f"Could not save likelihood: \n {e}")

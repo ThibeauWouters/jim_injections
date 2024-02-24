@@ -179,7 +179,9 @@ def make_uniform_cumulative_histogram(size: tuple, nb_bins: int = 100) -> np.arr
 
 def get_true_params_and_credible_level(chains: np.array, 
                                        true_params_list: np.array,
-                                       return_first: bool = False) -> tuple[np.array, float]:
+                                       return_first: bool = False,
+                                       reweigh_dL: bool = True,
+                                       one_sided: bool = False) -> tuple[np.array, float]:
     """
     Finds the true parameter set from a list of true parameter sets, and also computes its credible level.
 
@@ -190,8 +192,30 @@ def get_true_params_and_credible_level(chains: np.array,
         tuple[np.array, float]: The select true parameter set, and its credible level.
     """
     
-    # Indices which have to be treated as circular
-    circular_idx = [8, 9, 10, 11, 12]
+    # TODO implement this 
+    # # Indices which have to be treated as circular
+    # circular_idx = [8, 9, 10, 11, 12]
+    naming = list(PRIOR.keys())
+    
+    kde_file = "../debugging/kde_dL.npz"
+    data = np.load(kde_file)
+    kde_x = data["x"]
+    kde_y = data["y"]
+    
+    weight_fn = lambda x: np.interp(x, kde_x, kde_y)
+    
+    if reweigh_dL:
+        d_L_index = naming.index("d_L")
+        d_values = chains[:, d_L_index]
+        d_values = np.array(d_values)
+        # Compute the weights
+        weights = weight_fn(d_values)
+        weights = 1 / weights
+        # Normalize the weights
+        weights /= np.sum(weights)
+        # Resample the chains based on these weights
+        indices = np.random.choice(np.arange(len(chains)), size=len(chains), p=weights)
+        chains = chains[indices]
     
     if return_first:
         # Ignore the sky location mirrors, just take the first one
@@ -210,16 +234,14 @@ def get_true_params_and_credible_level(chains: np.array,
         # Iterate over each parameter of this "copy" of parameters
         for j, param in enumerate(true_params):
             
-            # if j in circular_idx:
-            #     pass
-            # else:
+            # TODO implement this
             q = percentileofscore(chains[:, j], param)
             q /= 100.0
             
-            # Two sided version:
-            credible_level = 1 - 2 * min(q, 1-q)
-            # # One sided version:
-            # credible_level = q
+            if one_sided :
+                credible_level = q
+            else:
+                credible_level = 1 - 2 * min(q, 1-q)
                 
             params_credible_level_list.append(credible_level)
         
@@ -242,9 +264,10 @@ def get_true_params_and_credible_level(chains: np.array,
     return true_params, credible_level
 
 def get_credible_levels_injections(outdir: str, 
-                                   reweigh_distance: bool = False,
                                    return_first: bool = True,
-                                   max_number_injections: int = -1) -> np.array:
+                                   max_number_injections: int = -1,
+                                   reweigh_distance: bool = True,
+                                   one_sided: bool = False) -> np.array:
     """
     Compute the credible levels list for all the injections. 
     
@@ -269,6 +292,7 @@ def get_credible_levels_injections(outdir: str,
     counter = 0
     
     print("Iterating over the injections, going to compute the credible levels")
+    print("NOTE: reweigh_distance is set to ", reweigh_distance)
     for subdir in tqdm(os.listdir(outdir)):
         subdir_path = os.path.join(outdir, subdir)
         
@@ -289,27 +313,34 @@ def get_credible_levels_injections(outdir: str,
             data = np.load(chains_filename)
             chains = data['chains'].reshape(-1, n_dim)
             
-            # Reweigh distance if needed
-            if reweigh_distance:
-                print("INFO: Reweighing distance for credible levels injections. . .")
-                d_L_index = naming.index("d_L")
-                d_values = chains[:, d_L_index]
-                weights = d_values ** 2
-                # Normalize the weights
-                weights /= np.sum(weights)
-                # Resample the chains based on these weights
-                indices = np.random.choice(np.arange(len(chains)), size=len(chains), p=weights)
-                chains = chains[indices]
-                print("INFO: Resampled chains!")
+            # # Reweigh distance if needed
+            # if reweigh_distance:
+            #     d_L_index = naming.index("d_L")
+            #     d_values = chains[:, d_L_index]
+            #     weights = d_values ** 2
+            #     # Normalize the weights
+            #     weights /= np.sum(weights)
+            #     # Resample the chains based on these weights
+            #     indices = np.random.choice(np.arange(len(chains)), size=len(chains), p=weights)
+            #     chains = chains[indices]
             
             # # Get the sky mirrored values as well, NOTE this outputs an array of arrays!
             mirrored_values = get_mirror_location(true_params) # tuple
             mirrored_values = np.vstack(mirrored_values) # np array
             all_true_params = np.vstack((true_params, mirrored_values))
             
-            true_params, credible_level = get_true_params_and_credible_level(chains, all_true_params, return_first=return_first)
+            
+            true_params, credible_level = get_true_params_and_credible_level(chains, 
+                                                                             all_true_params, 
+                                                                             return_first=return_first,
+                                                                             reweigh_dL=reweigh_distance,
+                                                                             one_sided=one_sided)
             
             credible_level_list.append(credible_level)
+            
+            # Also save the credible level
+            filename = f"{subdir_path}/credible_level.npz"
+            np.savez(filename, credible_level=credible_level)
             
             counter += 1
             if counter == max_number_injections:

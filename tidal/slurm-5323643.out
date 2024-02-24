@@ -1,258 +1,0 @@
-Thu Feb 22 10:57:33 CET 2024
-Running injection number: 14
-/gpfs/home6/twouters2/jim/src/jimgw/single_event/detector.py:410: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
-```
-from jaxtyping import jaxtyped
-# Use your favourite typechecker: usually one of the two lines below.
-from typeguard import typechecked as typechecker
-from beartype import beartype as typechecker
-
-@jaxtyped(typechecker=typechecker)
-def foo(...):
-```
-and the old double-decorator syntax
-```
-@jaxtyped
-@typechecker
-def foo(...):
-```
-should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
-In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
-```
-@jaxtyped(typechecker)
-def foo(...):
-```
-
-  def load_psd(
-/gpfs/home6/twouters2/jim/src/jimgw/prior.py:94: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
-```
-from jaxtyping import jaxtyped
-# Use your favourite typechecker: usually one of the two lines below.
-from typeguard import typechecked as typechecker
-from beartype import beartype as typechecker
-
-@jaxtyped(typechecker=typechecker)
-def foo(...):
-```
-and the old double-decorator syntax
-```
-@jaxtyped
-@typechecker
-def foo(...):
-```
-should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
-In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
-```
-@jaxtyped(typechecker)
-def foo(...):
-```
-
-  class Uniform(Prior):
-/gpfs/home6/twouters2/jim/src/jimgw/prior.py:149: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
-```
-from jaxtyping import jaxtyped
-# Use your favourite typechecker: usually one of the two lines below.
-from typeguard import typechecked as typechecker
-from beartype import beartype as typechecker
-
-@jaxtyped(typechecker=typechecker)
-def foo(...):
-```
-and the old double-decorator syntax
-```
-@jaxtyped
-@typechecker
-def foo(...):
-```
-should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
-In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
-```
-@jaxtyped(typechecker)
-def foo(...):
-```
-
-  class Unconstrained_Uniform(Prior):
-/gpfs/home6/twouters2/jim/src/jimgw/prior.py:278: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
-```
-from jaxtyping import jaxtyped
-# Use your favourite typechecker: usually one of the two lines below.
-from typeguard import typechecked as typechecker
-from beartype import beartype as typechecker
-
-@jaxtyped(typechecker=typechecker)
-def foo(...):
-```
-and the old double-decorator syntax
-```
-@jaxtyped
-@typechecker
-def foo(...):
-```
-should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
-In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
-```
-@jaxtyped(typechecker)
-def foo(...):
-```
-
-  class AlignedSpin(Prior):
-/gpfs/home6/twouters2/jim/src/jimgw/prior.py:392: UserWarning: As of jaxtyping version 0.2.24, jaxtyping now prefers the syntax
-```
-from jaxtyping import jaxtyped
-# Use your favourite typechecker: usually one of the two lines below.
-from typeguard import typechecked as typechecker
-from beartype import beartype as typechecker
-
-@jaxtyped(typechecker=typechecker)
-def foo(...):
-```
-and the old double-decorator syntax
-```
-@jaxtyped
-@typechecker
-def foo(...):
-```
-should no longer be used. (It will continue to work as it did before, but the new approach will produce more readable error messages.)
-In particular note that `typechecker` must be passed via keyword argument; the following is not valid:
-```
-@jaxtyped(typechecker)
-def foo(...):
-```
-
-  class PowerLaw(Prior):
-------------------------------------------------
-Arguments script:
-outdir: /scratch-local/twouters2.5323643
-load_existing_config: False
-N: 14
-SNR_threshold: 12
-waveform_approximant: TaylorF2
-relative_binning_binsize: 500
-relative_binning_ref_params_equal_true_params: True
-save_training_chains: False
-eps_mass_matrix: 5e-06
-smart_initial_guess: False
-use_scheduler: True
-stopping_criterion_global_acc: 0.2
-n_loop_training: 400
-n_loop_production: 50
-n_local_steps_training: 100
-n_global_steps_training: 400
-n_local_steps_production: 5
-n_global_steps_production: 400
-n_epochs: 50
-n_chains: 1000
-learning_rate: 0.001
-max_samples: 50000
-momentum: 0.9
-batch_size: 50000
-use_global: True
-logging: True
-keep_quantile: 0.0
-local_autotune: None
-train_thinning: 10
-output_thinning: 30
-n_sample_max: 10000
-precompile: False
-verbose: False
-num_layers: 10
-hidden_size: [128, 128]
-num_bins: 8
-which_local_sampler: MALA
-------------------------------------------------
-Starting main code
-Using polynomial learning rate scheduler
-Saving output to /scratch-local/twouters2.5323643
-The SNR threshold parameter is set to 12
-Generating new config
-Injection directory exists:  /scratch-local/twouters2.5323643/injection_14/
-Injecting signals . . .
-The injected parameters are {'M_c': 1.1100608576357796, 'eta': 0.2490830702620987, 's1_z': -0.003658586032677935, 's2_z': -0.010972675066025298, 'lambda_1': 4325.706808472504, 'lambda_2': 78.48418847737292, 'd_L': 90.86864184415973, 't_c': 0.010285353561259702, 'phase_c': 0.11773177538648412, 'iota': 2.331709126676854, 'psi': 1.2010405742124677, 'ra': 4.977887417161834, 'dec': -1.2657715165307584}
-Signal injected
-H1 SNR: 20.351516219036313
-L1 SNR: 18.151796933480675
-V1 SNR: 14.12896054259053
-Network SNR: 30.713180726556093
-Saving network SNR
-Saving injected signal as Numpy arrays for H1
-Saving injected signal as Numpy arrays for L1
-Saving injected signal as Numpy arrays for V1
-Start prior setup
-Saving prior bounds
-Finished prior setup
-Initializing likelihood
-Using the true parameters as reference parameters for the relative binning
-Initializing heterodyned likelihood..
-Finding reference parameters..
-Using provided reference parameters
-Constructing reference waveforms..
-Using MALA as the local sampler
-No autotune found, use input sampler_params
-Training normalizing flow
-Tuning global sampler:   0%|          | 0/400 [00:00<?, ?it/s]Tuning global sampler:   0%|          | 1/400 [02:52<19:06:07, 172.35s/it]Tuning global sampler:   0%|          | 2/400 [02:59<8:18:12, 75.11s/it]  Tuning global sampler:   1%|          | 3/400 [03:06<4:52:11, 44.16s/it]Tuning global sampler:   1%|          | 4/400 [03:13<3:14:50, 29.52s/it]Tuning global sampler:   1%|▏         | 5/400 [03:20<2:21:07, 21.44s/it]Tuning global sampler:   2%|▏         | 6/400 [03:27<1:48:38, 16.54s/it]Tuning global sampler:   2%|▏         | 7/400 [03:34<1:27:56, 13.43s/it]Tuning global sampler:   2%|▏         | 8/400 [03:41<1:14:21, 11.38s/it]Tuning global sampler:   2%|▏         | 9/400 [03:49<1:06:07, 10.15s/it]Tuning global sampler:   2%|▎         | 10/400 [03:56<59:35,  9.17s/it] Tuning global sampler:   3%|▎         | 11/400 [04:03<55:15,  8.52s/it]Tuning global sampler:   3%|▎         | 12/400 [04:10<52:15,  8.08s/it]Tuning global sampler:   3%|▎         | 13/400 [04:17<50:08,  7.77s/it]Tuning global sampler:   4%|▎         | 14/400 [04:24<48:39,  7.56s/it]Tuning global sampler:   4%|▍         | 15/400 [04:31<47:29,  7.40s/it]Tuning global sampler:   4%|▍         | 16/400 [04:39<47:32,  7.43s/it]Tuning global sampler:   4%|▍         | 17/400 [04:46<46:38,  7.31s/it]Tuning global sampler:   4%|▍         | 18/400 [04:53<45:59,  7.22s/it]Tuning global sampler:   5%|▍         | 19/400 [05:00<45:26,  7.15s/it]Tuning global sampler:   5%|▌         | 20/400 [05:07<45:11,  7.14s/it]Tuning global sampler:   5%|▌         | 21/400 [05:14<45:00,  7.13s/it]Tuning global sampler:   6%|▌         | 22/400 [05:21<44:49,  7.12s/it]Tuning global sampler:   6%|▌         | 23/400 [05:29<45:32,  7.25s/it]Tuning global sampler:   6%|▌         | 24/400 [05:36<45:08,  7.20s/it]Tuning global sampler:   6%|▋         | 25/400 [05:43<44:48,  7.17s/it]Tuning global sampler:   6%|▋         | 26/400 [05:50<44:31,  7.14s/it]Tuning global sampler:   7%|▋         | 27/400 [05:57<44:12,  7.11s/it]Tuning global sampler:   7%|▋         | 28/400 [06:04<43:59,  7.09s/it]Tuning global sampler:   7%|▋         | 29/400 [06:11<43:36,  7.05s/it]Tuning global sampler:   8%|▊         | 30/400 [06:18<44:11,  7.17s/it]Tuning global sampler:   8%|▊         | 31/400 [06:25<43:39,  7.10s/it]Tuning global sampler:   8%|▊         | 32/400 [06:32<43:14,  7.05s/it]Tuning global sampler:   8%|▊         | 33/400 [06:39<42:56,  7.02s/it]Tuning global sampler:   8%|▊         | 34/400 [06:46<42:39,  6.99s/it]Tuning global sampler:   9%|▉         | 35/400 [06:53<42:25,  6.98s/it]Tuning global sampler:   9%|▉         | 36/400 [07:00<42:09,  6.95s/it]Tuning global sampler:   9%|▉         | 37/400 [07:07<42:53,  7.09s/it]Tuning global sampler:  10%|▉         | 38/400 [07:14<42:30,  7.05s/it]Tuning global sampler:  10%|▉         | 39/400 [07:21<42:12,  7.02s/it]Tuning global sampler:  10%|█         | 40/400 [07:28<41:59,  7.00s/it]Tuning global sampler:  10%|█         | 41/400 [07:35<41:49,  6.99s/it]Tuning global sampler:  10%|█         | 42/400 [07:42<41:38,  6.98s/it]Tuning global sampler:  11%|█         | 43/400 [07:50<42:27,  7.14s/it]Tuning global sampler:  11%|█         | 44/400 [07:57<42:52,  7.23s/it]Tuning global sampler:  11%|█▏        | 45/400 [08:04<42:09,  7.12s/it]Tuning global sampler:  12%|█▏        | 46/400 [08:11<41:38,  7.06s/it]Tuning global sampler:  12%|█▏        | 47/400 [08:18<41:18,  7.02s/it]Tuning global sampler:  12%|█▏        | 48/400 [08:25<41:05,  7.01s/it]Tuning global sampler:  12%|█▏        | 49/400 [08:32<40:50,  6.98s/it]Tuning global sampler:  12%|█▎        | 50/400 [08:39<40:41,  6.97s/it]Tuning global sampler:  13%|█▎        | 51/400 [08:46<40:30,  6.96s/it]Tuning global sampler:  13%|█▎        | 52/400 [08:53<41:12,  7.11s/it]Tuning global sampler:  13%|█▎        | 53/400 [09:00<40:49,  7.06s/it]Tuning global sampler:  14%|█▎        | 54/400 [09:07<40:25,  7.01s/it]Tuning global sampler:  14%|█▍        | 55/400 [09:14<40:07,  6.98s/it]Tuning global sampler:  14%|█▍        | 56/400 [09:21<39:55,  6.96s/it]Tuning global sampler:  14%|█▍        | 57/400 [09:28<39:47,  6.96s/it]Tuning global sampler:  14%|█▍        | 58/400 [09:35<39:40,  6.96s/it]Tuning global sampler:  15%|█▍        | 59/400 [09:42<39:32,  6.96s/it]Tuning global sampler:  15%|█▌        | 60/400 [09:49<40:18,  7.11s/it]Tuning global sampler:  15%|█▌        | 61/400 [09:56<39:58,  7.07s/it]Tuning global sampler:  16%|█▌        | 62/400 [10:03<39:38,  7.04s/it]Tuning global sampler:  16%|█▌        | 63/400 [10:10<39:17,  6.99s/it]Tuning global sampler:  16%|█▌        | 64/400 [10:17<39:01,  6.97s/it]Tuning global sampler:  16%|█▋        | 65/400 [10:24<38:52,  6.96s/it]Tuning global sampler:  16%|█▋        | 66/400 [10:31<38:44,  6.96s/it]Tuning global sampler:  17%|█▋        | 67/400 [10:38<39:30,  7.12s/it]Tuning global sampler:  17%|█▋        | 68/400 [10:45<39:09,  7.08s/it]Tuning global sampler:  17%|█▋        | 69/400 [10:52<38:48,  7.04s/it]Tuning global sampler:  18%|█▊        | 70/400 [10:59<38:33,  7.01s/it]Tuning global sampler:  18%|█▊        | 71/400 [11:06<38:22,  7.00s/it]Tuning global sampler:  18%|█▊        | 72/400 [11:13<38:08,  6.98s/it]Tuning global sampler:  18%|█▊        | 73/400 [11:20<37:56,  6.96s/it]Tuning global sampler:  18%|█▊        | 74/400 [11:27<37:48,  6.96s/it]Tuning global sampler:  19%|█▉        | 75/400 [11:34<38:36,  7.13s/it]Tuning global sampler:  19%|█▉        | 76/400 [11:41<38:13,  7.08s/it]Tuning global sampler:  19%|█▉        | 77/400 [11:48<37:55,  7.04s/it]Tuning global sampler:  20%|█▉        | 78/400 [11:55<37:42,  7.03s/it]Tuning global sampler:  20%|█▉        | 79/400 [12:02<37:30,  7.01s/it]Tuning global sampler:  20%|██        | 80/400 [12:09<37:19,  7.00s/it]Tuning global sampler:  20%|██        | 81/400 [12:16<37:23,  7.03s/it]Tuning global sampler:  20%|██        | 82/400 [12:23<37:06,  7.00s/it]Tuning global sampler:  21%|██        | 83/400 [12:31<37:45,  7.15s/it]Tuning global sampler:  21%|██        | 84/400 [12:38<37:21,  7.09s/it]Tuning global sampler:  21%|██▏       | 85/400 [12:45<37:01,  7.05s/it]Tuning global sampler:  22%|██▏       | 86/400 [12:52<36:45,  7.03s/it]Tuning global sampler:  22%|██▏       | 87/400 [12:59<36:33,  7.01s/it]Tuning global sampler:  22%|██▏       | 88/400 [13:05<36:22,  6.99s/it]Tuning global sampler:  22%|██▏       | 89/400 [13:12<36:10,  6.98s/it]Tuning global sampler:  22%|██▎       | 90/400 [13:19<35:57,  6.96s/it]Tuning global sampler:  23%|██▎       | 91/400 [13:27<36:36,  7.11s/it]Tuning global sampler:  23%|██▎       | 92/400 [13:34<36:16,  7.07s/it]Tuning global sampler:  23%|██▎       | 93/400 [13:41<36:00,  7.04s/it]Tuning global sampler:  24%|██▎       | 94/400 [13:48<35:47,  7.02s/it]Tuning global sampler:  24%|██▍       | 95/400 [13:55<35:35,  7.00s/it]Tuning global sampler:  24%|██▍       | 96/400 [14:02<35:25,  6.99s/it]Tuning global sampler:  24%|██▍       | 97/400 [14:09<35:15,  6.98s/it]Tuning global sampler:  24%|██▍       | 98/400 [14:16<35:05,  6.97s/it]Tuning global sampler:  25%|██▍       | 99/400 [14:23<35:46,  7.13s/it]Tuning global sampler:  25%|██▌       | 100/400 [14:30<35:18,  7.06s/it]Tuning global sampler:  25%|██▌       | 101/400 [14:37<35:02,  7.03s/it]Tuning global sampler:  26%|██▌       | 102/400 [14:44<34:48,  7.01s/it]Tuning global sampler:  26%|██▌       | 103/400 [14:51<34:36,  6.99s/it]Tuning global sampler:  26%|██▌       | 104/400 [14:58<34:26,  6.98s/it]Tuning global sampler:  26%|██▋       | 105/400 [15:05<34:18,  6.98s/it]Tuning global sampler:  26%|██▋       | 106/400 [15:12<34:10,  6.97s/it]Tuning global sampler:  27%|██▋       | 107/400 [15:19<34:52,  7.14s/it]Tuning global sampler:  27%|██▋       | 108/400 [15:26<34:25,  7.07s/it]Tuning global sampler:  27%|██▋       | 109/400 [15:33<34:05,  7.03s/it]Tuning global sampler:  28%|██▊       | 110/400 [15:40<33:52,  7.01s/it]Tuning global sampler:  28%|██▊       | 111/400 [15:47<33:43,  7.00s/it]Tuning global sampler:  28%|██▊       | 112/400 [15:54<33:32,  6.99s/it]Tuning global sampler:  28%|██▊       | 113/400 [16:01<33:22,  6.98s/it]Tuning global sampler:  28%|██▊       | 114/400 [16:08<33:14,  6.97s/it]Tuning global sampler:  29%|██▉       | 115/400 [16:15<33:58,  7.15s/it]Tuning global sampler:  29%|██▉       | 115/400 [16:22<40:35,  8.55s/it]
-Compiling MALA body
-Early stopping: global acceptance target rate achieved
-Starting Production run
-Production run:   0%|          | 0/50 [00:00<?, ?it/s]Production run:   2%|▏         | 1/50 [00:39<32:02, 39.23s/it]Production run:   4%|▍         | 2/50 [00:41<13:50, 17.29s/it]Production run:   6%|▌         | 3/50 [00:43<08:04, 10.31s/it]Production run:   8%|▊         | 4/50 [00:45<05:22,  7.00s/it]Production run:  10%|█         | 5/50 [00:47<03:53,  5.18s/it]Production run:  12%|█▏        | 6/50 [00:48<02:58,  4.05s/it]Production run:  14%|█▍        | 7/50 [00:51<02:29,  3.48s/it]Production run:  16%|█▌        | 8/50 [00:53<02:05,  2.99s/it]Production run:  18%|█▊        | 9/50 [00:55<01:49,  2.68s/it]Production run:  20%|██        | 10/50 [00:57<01:38,  2.45s/it]Production run:  22%|██▏       | 11/50 [00:59<01:29,  2.29s/it]Production run:  24%|██▍       | 12/50 [01:00<01:21,  2.16s/it]Production run:  26%|██▌       | 13/50 [01:02<01:17,  2.09s/it]Production run:  28%|██▊       | 14/50 [01:04<01:13,  2.04s/it]Production run:  30%|███       | 15/50 [01:06<01:11,  2.03s/it]Production run:  32%|███▏      | 16/50 [01:09<01:11,  2.11s/it]Production run:  34%|███▍      | 17/50 [01:11<01:08,  2.08s/it]Production run:  36%|███▌      | 18/50 [01:12<01:04,  2.01s/it]Production run:  38%|███▊      | 19/50 [01:14<01:02,  2.00s/it]Production run:  40%|████      | 20/50 [01:16<01:00,  2.00s/it]Production run:  42%|████▏     | 21/50 [01:18<00:58,  2.00s/it]Production run:  44%|████▍     | 22/50 [01:20<00:55,  2.00s/it]Production run:  46%|████▌     | 23/50 [01:22<00:53,  2.00s/it]Production run:  48%|████▊     | 24/50 [01:24<00:50,  1.95s/it]Production run:  50%|█████     | 25/50 [01:26<00:49,  1.97s/it]Production run:  52%|█████▏    | 26/50 [01:28<00:47,  1.97s/it]Production run:  54%|█████▍    | 27/50 [01:30<00:45,  1.98s/it]Production run:  56%|█████▌    | 28/50 [01:32<00:43,  1.97s/it]Production run:  58%|█████▊    | 29/50 [01:34<00:41,  1.98s/it]Production run:  60%|██████    | 30/50 [01:36<00:38,  1.94s/it]Production run:  62%|██████▏   | 31/50 [01:38<00:36,  1.94s/it]Production run:  64%|██████▍   | 32/50 [01:40<00:35,  1.96s/it]Production run:  66%|██████▌   | 33/50 [01:42<00:33,  1.97s/it]Production run:  68%|██████▊   | 34/50 [01:44<00:31,  1.97s/it]Production run:  70%|███████   | 35/50 [01:46<00:29,  1.98s/it]Production run:  72%|███████▏  | 36/50 [01:48<00:27,  1.94s/it]Production run:  74%|███████▍  | 37/50 [01:50<00:25,  1.96s/it]Production run:  76%|███████▌  | 38/50 [01:52<00:23,  1.97s/it]Production run:  78%|███████▊  | 39/50 [01:54<00:21,  1.97s/it]Production run:  80%|████████  | 40/50 [01:56<00:19,  1.98s/it]Production run:  82%|████████▏ | 41/50 [01:58<00:17,  1.98s/it]Production run:  84%|████████▍ | 42/50 [02:00<00:15,  1.94s/it]Production run:  86%|████████▌ | 43/50 [02:02<00:13,  1.96s/it]Production run:  88%|████████▊ | 44/50 [02:04<00:11,  1.97s/it]Production run:  90%|█████████ | 45/50 [02:06<00:09,  1.97s/it]Production run:  92%|█████████▏| 46/50 [02:07<00:07,  1.97s/it]Production run:  94%|█████████▍| 47/50 [02:09<00:05,  1.97s/it]Production run:  96%|█████████▌| 48/50 [02:11<00:03,  1.94s/it]Production run:  98%|█████████▊| 49/50 [02:13<00:01,  1.95s/it]Production run: 100%|██████████| 50/50 [02:15<00:00,  1.96s/it]Production run: 100%|██████████| 50/50 [02:15<00:00,  2.72s/it]
-Training summary
-==========
-M_c: 1.125 +/- 0.114
-eta: 0.245 +/- 0.006
-s1_z: -0.003 +/- 0.025
-s2_z: 0.001 +/- 0.026
-lambda_1: 2580.046 +/- 1231.655
-lambda_2: 2321.536 +/- 1308.833
-d_L: 135.344 +/- 77.761
-t_c: 0.029 +/- 0.024
-phase_c: 3.440 +/- 1.730
-iota: 1.350 +/- 0.423
-psi: 1.390 +/- 0.879
-ra: 2.409 +/- 1.138
-dec: 0.334 +/- 0.724
-Log probability: 267.947 +/- 192.453
-Local acceptance: 0.287 +/- 0.452
-Global acceptance: 0.019 +/- 0.136
-Max loss: 1614.211, Min loss: -0.855
-Production summary
-==========
-M_c: 1.110 +/- 0.000
-eta: 0.247 +/- 0.004
-s1_z: 0.000 +/- 0.026
-s2_z: -0.001 +/- 0.028
-lambda_1: 2428.055 +/- 1042.485
-lambda_2: 2503.853 +/- 1417.382
-d_L: 59.945 +/- 6.433
-t_c: 0.042 +/- 0.001
-phase_c: 3.674 +/- 1.746
-iota: 1.219 +/- 0.074
-psi: 1.441 +/- 0.787
-ra: 1.807 +/- 0.009
-dec: 0.911 +/- 0.009
-Log probability: 447.743 +/- 2.433
-Local acceptance: 0.049 +/- 0.216
-Global acceptance: 0.200 +/- 0.400
-Saving samples to /scratch-local/twouters2.5323643/injection_14/results_training.npz
-Saving the NF
-Saving the jim hyperparameters
-Time taken: 1298.9993119239807 seconds (21.649988532066345 minutes)
-Saving runtime
-Finished injection recovery successfully!
-Copying to: /home/twouters2/jim_injections/tidal/redo_slurm/injection_14more_MALA
-cp: target '/home/twouters2/jim_injections/tidal/redo_slurm/injection_14more_MALA' is not a directory
-Finally, moving the output files
-mv: cannot move '/home/twouters2/jim_injections/tidal/slurm-5323643.out' to '/home/twouters2/jim_injections/tidal/redo_slurm/injection_14more_MALA/log.out': No such file or directory
-DONE
-
-JOB STATISTICS
-==============
-Job ID: 5323643
-Cluster: snellius
-User/Group: twouters2/twouters2
-State: COMPLETED (exit code 0)
-Nodes: 1
-Cores per node: 18
-CPU Utilized: 00:18:44
-CPU Efficiency: 4.73% of 06:35:42 core-walltime
-Job Wall-clock time: 00:21:59
-Memory Utilized: 5.13 GB
-Memory Efficiency: 20.53% of 25.00 GB
