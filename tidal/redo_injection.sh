@@ -3,7 +3,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -p gpu
-#SBATCH -t 40:00
+#SBATCH -t 01:00:00
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-gpu=1
 #SBATCH --mem-per-gpu=25G
@@ -36,12 +36,9 @@ python $MY_DIR/injection_recovery.py \
     --N $injection_number \
     --load-existing-config True \
     --eps-mass-matrix 0.000005 \
-    --n-local-steps-training 100 \
-    --n-local-steps-production 100 \
     --stopping-criterion-global-acc 0.20 \
     --which-distance-prior powerlaw \
-    --which-local-sampler gaussian \
-    --waveform-approximant TaylorF2 \
+    --waveform-approximant IMRPhenomD_NRTidalv2 \
  
 export final_output_dir="$MY_DIR/redo_slurm/injection_$injection_number$SLURM_JOB_NAME"
 echo "Copying to: $final_output_dir"
@@ -56,7 +53,7 @@ fi
 cp -r $TMPDIR/injection_$injection_number/* $final_output_dir
 
 # Also copy the output file there
-echo "Finally, moving the output file"s
+echo "Finally, moving the output files"
 mv "$MY_DIR/slurm-$SLURM_JOBID.out" "$final_output_dir/log.out"
 
 echo "DONE"

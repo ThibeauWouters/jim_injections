@@ -48,10 +48,6 @@ plt.rcParams.update(matplotlib_params)
 
 labels = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda$', r'$\delta\Lambda$', r'$d_{\rm{L}}/{\rm Mpc}$', r'$t_c$', r'$\phi_c$', r'$\iota$', r'$\psi$', r'$\alpha$', r'$\delta$']
 
-print("Os listdir")
-print(os.listdir('.'))
-print(os.listdir('./data/'))
-
 ############################################
 ### Injection recovery utility functions ###
 ############################################

@@ -6,7 +6,7 @@
 #SBATCH -t 40:00
 #SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-gpu=1
-#SBATCH --mem-per-gpu=25G
+#SBATCH --mem-per-gpu=20G
 
 now=$(date)
 echo "$now"
@@ -62,5 +62,7 @@ export final_output_dir=$this_event_dir/outdir/
 # # Also copy the output file there
 echo "Finally, moving the output file"
 mv "$events_dir/slurm-$SLURM_JOBID.out" "$final_output_dir/log.out"
-
+# TODO make this less cumbersome
+mv ./outdir/* "$final_output_dir/"
+rm -r ./outdir
 echo "DONE"

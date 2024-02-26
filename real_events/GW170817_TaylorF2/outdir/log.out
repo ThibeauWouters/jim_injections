@@ -1,9 +1,7 @@
-Mon Feb 26 10:13:02 CET 2024
-Directory created: /scratch-local/twouters2.5363979/data/
+Mon Feb 26 14:08:15 CET 2024
+Directory created: /scratch-local/twouters2.5366449/data/
+cp: cannot stat '/home/twouters2/jim_injections/real_events/data/GW170817//*': No such file or directory
 [cuda(id=0)]
-Os listdir
-['GW170817_data', 'slurm-5363979.out', 'analyze_event.sh', 'GW170817_TaylorF2', 'data']
-['GW170817']
 (13, 2)
 Initializing heterodyned likelihood..
 Finding reference parameters..
@@ -13,10 +11,10 @@ Running with n_bins  =  500
 Using MALA as the local sampler
 No autotune found, use input sampler_params
 Training normalizing flow
-Tuning global sampler:   0%|          | 0/2 [00:00<?, ?it/s]Tuning global sampler:  50%|█████     | 1/2 [02:49<02:49, 169.59s/it]Tuning global sampler: 100%|██████████| 2/2 [02:53<00:00, 72.39s/it] Tuning global sampler: 100%|██████████| 2/2 [02:53<00:00, 86.97s/it]
+Tuning global sampler:   0%|          | 0/2 [00:00<?, ?it/s]Tuning global sampler:  50%|█████     | 1/2 [02:49<02:49, 169.60s/it]Tuning global sampler: 100%|██████████| 2/2 [02:53<00:00, 72.39s/it] Tuning global sampler: 100%|██████████| 2/2 [02:53<00:00, 86.97s/it]
 Compiling MALA body
 Starting Production run
-Production run:   0%|          | 0/2 [00:00<?, ?it/s]Production run:  50%|█████     | 1/2 [00:00<00:00,  1.06it/s]Production run: 100%|██████████| 2/2 [00:01<00:00,  1.08it/s]Production run: 100%|██████████| 2/2 [00:01<00:00,  1.08it/s]
+Production run:   0%|          | 0/2 [00:00<?, ?it/s]Production run:  50%|█████     | 1/2 [00:00<00:00,  1.05it/s]Production run: 100%|██████████| 2/2 [00:01<00:00,  1.08it/s]Production run: 100%|██████████| 2/2 [00:01<00:00,  1.07it/s]
 Training summary
 ==========
 M_c: 1.195 +/- 0.008
@@ -58,11 +56,8 @@ Saving samples to ./outdir/results_training.npz
 Saving the NF
 Saving the jim hyperparameters
 Error occurred saving jim hyperparameters, are all hyperparams JSON compatible?: Object of type function is not JSON serializable
-Time taken: 254.38689923286438 seconds (4.239781653881073 minutes)
+Time taken: 253.83123779296875 seconds (4.230520629882813 minutes)
 Saving runtime
 Finished successfully!!!
-Copying to: /home/twouters2/jim_injections/real_events/GW170817_TaylorF2/outdir/
-Directory already exists: /home/twouters2/jim_injections/real_events/GW170817_TaylorF2/outdir/
-cp: cannot stat '/scratch-local/twouters2.5363979/outdir/*': No such file or directory
 Finally, moving the output file
 DONE
