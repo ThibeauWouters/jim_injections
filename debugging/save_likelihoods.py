@@ -324,14 +324,9 @@ def body(args):
     
     # Print difference with the true params
     diffs = abs(ref_params - truths)
-    print("diffs")
-    print(diffs)
     
     ref_params = jnp.array(ref_params)
     ref_params = complete_prior.add_name(ref_params)
-    
-    print("ref_params")
-    print(ref_params)
     
     ref_params["iota"] = jnp.arccos(ref_params["cos_iota"])
     ref_params["dec"] = jnp.arcsin(ref_params["sin_dec"])
@@ -348,7 +343,7 @@ def body(args):
         duration=config["duration"],
         post_trigger_duration=config["post_trigger_duration"],
         # put the reference waveform of the relative binning at the true parameters
-        ref_params=ref_params
+        ref_params=true_param
     )
 
     # Save the ref params
@@ -358,11 +353,10 @@ def body(args):
     
     try:
         import pickle
-        with open(f"{outdir}likelihood_ML.pkl", 'wb') as file:
+        with open(f"{outdir}likelihood.pkl", 'wb') as file:
             pickle.dump(likelihood, file)
     except Exception as e:
         print(f"Could not save likelihood: \n {e}")
-        
 
     print("Finished successfully!")
 

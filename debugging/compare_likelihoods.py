@@ -195,8 +195,10 @@ for WHICH_LIKELIHOOD in ["ML", "original"]:
             q = param_named['q']
             param_named['eta'] = q / (1 + q)**2
             
-            log_likelihoods.append(likelihood.evaluate(param_named, {}))
-            log_likelihoods_original.append(likelihood.evaluate_original(param_named, {}))
+            value = likelihood.evaluate(param_named, {})
+            log_likelihoods.append(value)
+            value = likelihood.evaluate_original(param_named, {})
+            log_likelihoods_original.append(value)
         
         log_likelihoods = np.array(log_likelihoods)
         log_likelihoods_original = np.array(log_likelihoods_original)
