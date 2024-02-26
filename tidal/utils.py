@@ -10,13 +10,12 @@ import corner
 import jax
 from jaxtyping import Array, Float
 
-from injection_recovery import NAMING
+# from injection_recovery import NAMING
 
-# NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
+NAMING = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
 
 default_corner_kwargs = dict(bins=40, 
                         smooth=1., 
-                        show_titles=False,
                         label_kwargs=dict(fontsize=16),
                         title_kwargs=dict(fontsize=16), 
                         color="blue",
@@ -48,6 +47,10 @@ matplotlib_params = {"axes.grid": True,
 plt.rcParams.update(matplotlib_params)
 
 labels = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda$', r'$\delta\Lambda$', r'$d_{\rm{L}}/{\rm Mpc}$', r'$t_c$', r'$\phi_c$', r'$\iota$', r'$\psi$', r'$\alpha$', r'$\delta$']
+
+print("Os listdir")
+print(os.listdir('.'))
+print(os.listdir('./data/'))
 
 ############################################
 ### Injection recovery utility functions ###
@@ -741,6 +744,13 @@ def get_parser(**kwargs):
         default=False,
         help="Whether to do no noise injection"
     )
+    parser.add_argument(
+        "--which-distance-prior",
+        type=str,
+        default="uniform",
+        help="Which prior to use for distance"
+    )
+    
     
     # # TODO this has to be implemented
     # parser.add_argument(

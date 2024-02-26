@@ -1,14 +1,14 @@
-import psutil
-p = psutil.Process()
-p.cpu_affinity([0])
+# import psutil
+# p = psutil.Process()
+# p.cpu_affinity([0])
 
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "3"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
+# import os
+# os.environ['CUDA_VISIBLE_DEVICES'] = "3"
+# os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
 
 import optax
 import utils  # our plotting and postprocessing utilities script
-from jimgw.prior import Uniform, Composite
+from jimgw.prior import Uniform, Composite, PowerLaw
 from jimgw.single_event.waveform import RippleTaylorF2, RippleIMRPhenomD_NRTidalv2
 from jimgw.single_event.likelihood import HeterodynedTransientLikelihoodFD, TransientLikelihoodFD
 from jimgw.single_event.detector import H1, L1, V1
@@ -203,7 +203,6 @@ def body(args):
                 detector_param,
                 # note: the function load_psd actaully loads the asd
                 psd_file=psd_files[idx],
-                no_noise=args.no_noise
             )
         print("Signal injected")
 
@@ -251,7 +250,14 @@ def body(args):
     s2z_prior = Uniform(prior_low[3], prior_high[3], naming=['s2_z'])
     lambda_1_prior = Uniform(prior_low[4], prior_high[4], naming=['lambda_1'])
     lambda_2_prior = Uniform(prior_low[5], prior_high[5], naming=['lambda_2'])
-    dL_prior = Uniform(prior_low[6], prior_high[6], naming=['d_L'])
+    
+    if args.which_distance_prior == "uniform":
+        print("INFO: Using uniform distance prior")
+        dL_prior = Uniform(prior_low[6], prior_high[6], naming=['d_L'])
+    else:
+        print("INFO: Using powerlaw distance prior")
+        dL_prior = PowerLaw(prior_low[6], prior_high[6], 2.0, naming=['d_L'])
+    
     tc_prior = Uniform(prior_low[7], prior_high[7], naming=['t_c'])
     phic_prior = Uniform(prior_low[8], prior_high[8], naming=['phase_c'])
     cos_iota_prior = Uniform(prior_low[9], prior_high[9], naming=["cos_iota"],

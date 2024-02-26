@@ -35,10 +35,12 @@ python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR \
     --N $injection_number \
     --load-existing-config True \
-    --n-local-steps-training 200 \
-    --n-local-steps-production 200 \
     --eps-mass-matrix 0.000005 \
+    --n-local-steps-training 100 \
+    --n-local-steps-production 100 \
     --stopping-criterion-global-acc 0.20 \
+    --which-distance-prior powerlaw \
+    --which-local-sampler gaussian \
     --waveform-approximant TaylorF2 \
  
 export final_output_dir="$MY_DIR/redo_slurm/injection_$injection_number$SLURM_JOB_NAME"
