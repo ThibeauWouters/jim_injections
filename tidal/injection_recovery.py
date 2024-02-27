@@ -235,8 +235,18 @@ def body(args):
 
     print("Start prior setup")
 
-    # Priors without transformation
-    Mc_prior = Uniform(prior_low[0], prior_high[0], naming=['M_c'])
+    ### Priors
+    
+    # Can do a tight prior on chirp mass
+    if args.chirp_mass_prior == "tight":
+        mc_min = true_param["M_c"] - 0.01
+        mc_max = true_param["M_c"] + 0.01
+        print(f"INFO: Using chirp mass prior with range {mc_min} to {mc_max}")
+    else:
+        mc_min = prior_low[0]
+        mc_max = prior_high[0]
+    Mc_prior = Uniform(mc_min, mc_max, naming=['M_c'])
+    
     q_prior = Uniform(prior_low[1], prior_high[1], naming=['q'],
                       transforms={
         'q': (
