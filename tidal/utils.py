@@ -529,6 +529,12 @@ def get_parser(**kwargs):
         help="Which waveform approximant to use. Recommended to use TaylorF2 for now, NRTidalv2 might still be a bit unstable.",
     )
     parser.add_argument(
+        "--use-relative-binning",
+        type=bool,
+        default=True,
+        help="Whether or not to use relative binning.",
+    )
+    parser.add_argument(
         "--relative-binning-binsize",
         type=int,
         default=500,

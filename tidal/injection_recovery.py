@@ -1,10 +1,10 @@
-# import psutil
-# p = psutil.Process()
-# p.cpu_affinity([0])
+import psutil
+p = psutil.Process()
+p.cpu_affinity([0])
 
-# import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = "3"
-# os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = "3"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
 
 import optax
 import utils  # our plotting and postprocessing utilities script
@@ -317,18 +317,27 @@ def body(args):
         ref_params = None
         print("Will search for reference waveform for relative binning")
 
-    likelihood = HeterodynedTransientLikelihoodFD(
-        ifos,
-        prior=complete_prior,
-        bounds=bounds,
-        n_bins=args.relative_binning_binsize,
-        waveform=waveform,
-        trigger_time=config["trigger_time"],
-        duration=config["duration"],
-        post_trigger_duration=config["post_trigger_duration"],
-        # put the reference waveform of the relative binning at the true parameters
-        ref_params=ref_params
-    )
+    if args.use_relative_binning:
+        likelihood = HeterodynedTransientLikelihoodFD(
+            ifos,
+            waveform=waveform,
+            prior=complete_prior,
+            bounds=bounds,
+            n_bins=args.relative_binning_binsize,
+            trigger_time=config["trigger_time"],
+            duration=config["duration"],
+            post_trigger_duration=config["post_trigger_duration"],
+            ref_params=ref_params
+        )
+    else:
+        print("INFO: Using standard likelihood")
+        likelihood = TransientLikelihoodFD(
+            ifos,
+            waveform=waveform,
+            trigger_time=config["trigger_time"],
+            duration=config["duration"],
+            post_trigger_duration=config["post_trigger_duration"],
+        )
 
     # Save the ref params
     utils.save_relative_binning_ref_params(likelihood, outdir)

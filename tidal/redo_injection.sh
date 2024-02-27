@@ -35,10 +35,11 @@ python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR \
     --N $injection_number \
     --load-existing-config True \
+    --use-relative-binning False \
     --eps-mass-matrix 0.000005 \
     --stopping-criterion-global-acc 0.20 \
     --which-distance-prior powerlaw \
-    --waveform-approximant IMRPhenomD_NRTidalv2 \
+    --waveform-approximant TaylorF2 \
  
 export final_output_dir="$MY_DIR/redo_slurm/injection_$injection_number$SLURM_JOB_NAME"
 echo "Copying to: $final_output_dir"
