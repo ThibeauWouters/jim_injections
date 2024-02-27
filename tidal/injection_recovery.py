@@ -203,6 +203,7 @@ def body(args):
                 detector_param,
                 # note: the function load_psd actaully loads the asd
                 psd_file=psd_files[idx],
+                no_noise=args.no_noise
             )
         print("Signal injected")
 

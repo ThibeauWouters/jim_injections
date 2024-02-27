@@ -31,7 +31,7 @@ cp -r $MY_DIR/psds/ "$TMPDIR"
 cp -r "$MY_DIR/redo_slurm/injection_$injection_number" "$TMPDIR"
 
 # Run the script
-python $MY_DIR/injection_recovery.py \
+python $MY_DIR/injection_recovery_no_tidal.py \
     --outdir $TMPDIR \
     --N $injection_number \
     --load-existing-config True \

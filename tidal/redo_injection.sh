@@ -13,7 +13,7 @@ echo "$now"
 # Define dirs
 export MY_DIR=$HOME/jim_injections/tidal
 # Injection number to be ran
-declare -i injection_number=14
+declare -i injection_number=18
 export injection_number
 
 echo "Running injection number: $injection_number"
@@ -35,7 +35,6 @@ python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR \
     --N $injection_number \
     --load-existing-config True \
-    --use-relative-binning False \
     --eps-mass-matrix 0.000005 \
     --stopping-criterion-global-acc 0.20 \
     --which-distance-prior powerlaw \

@@ -349,6 +349,7 @@ def plot_chains(chains, name, outdir, truths = None, labels = labels, n_dim: int
     
     chains = np.array(chains)
     
+    
     # Check if 3D, then reshape
     if len(np.shape(chains)) == 3:
         chains = chains.reshape(-1, n_dim)
