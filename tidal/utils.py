@@ -752,6 +752,12 @@ def get_parser(**kwargs):
         default="uniform",
         help="Which prior to use for distance"
     )
+    parser.add_argument(
+        "--chirp-mass-prior",
+        type=str,
+        default="regular",
+        help="Which chirp mass prior to use. For now, only tight changes the prior, to be +- 0.01 around the injected value."
+    )
     
     
     # # TODO this has to be implemented
