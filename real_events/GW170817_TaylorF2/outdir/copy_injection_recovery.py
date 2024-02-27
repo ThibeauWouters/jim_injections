@@ -268,8 +268,8 @@ scheduler_string = f"Polynomial scheduler: start_lr = {start_lr}, end_lr = {end_
 jim = Jim(
     likelihood,
     prior,
-    n_loop_training=2,
-    n_loop_production=2,
+    n_loop_training=n_loop_training,
+    n_loop_production=50,
     n_local_steps=5,
     n_global_steps=400,
     n_chains=n_chains,

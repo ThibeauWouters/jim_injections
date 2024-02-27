@@ -345,13 +345,13 @@ def plot_log_prob(log_prob, label, name, outdir):
     plt.close()
 
     
-def plot_chains(chains, name, outdir, truths = None, labels = labels):
+def plot_chains(chains, name, outdir, truths = None, labels = labels, n_dim: int = 13):
     
     chains = np.array(chains)
     
     # Check if 3D, then reshape
     if len(np.shape(chains)) == 3:
-        chains = chains.reshape(-1, 13)
+        chains = chains.reshape(-1, n_dim)
     
     # Find index of cos iota and sin dec
     cos_iota_index = labels.index(r'$\iota$')
@@ -363,7 +363,7 @@ def plot_chains(chains, name, outdir, truths = None, labels = labels):
     fig = corner.corner(chains, labels = labels, truths = truths, hist_kwargs={'density': True}, **default_corner_kwargs)
     fig.savefig(f"{outdir}{name}.png", bbox_inches='tight')  
     
-def plot_chains_from_file(outdir, load_true_params: bool = False):
+def plot_chains_from_file(outdir, load_true_params: bool = False, n_dim: int = 13):
     
     filename = outdir + 'results_production.npz'
     data = np.load(filename)
@@ -374,7 +374,7 @@ def plot_chains_from_file(outdir, load_true_params: bool = False):
         values = chains[:, :, i].flatten()
         my_chains.append(values)
     my_chains = np.array(my_chains).T
-    chains = chains.reshape(-1, 13)
+    chains = chains.reshape(-1, n_dim)
     if load_true_params:
         truths = load_true_params_from_config(outdir)
     else:

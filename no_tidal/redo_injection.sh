@@ -11,7 +11,7 @@
 now=$(date)
 echo "$now"
 # Define dirs
-export MY_DIR=$HOME/jim_injections/tidal
+export MY_DIR=$HOME/jim_injections/no_tidal
 # Injection number to be ran
 declare -i injection_number=14
 export injection_number
@@ -24,7 +24,7 @@ module load Python/3.10.4-GCCcore-11.3.0
 conda activate jim
  
 # Copy necessary files
-cp $MY_DIR/injection_recovery.py "$TMPDIR"
+cp $MY_DIR/injection_recovery_no_tidal.py "$TMPDIR"
 cp $MY_DIR/utils.py "$TMPDIR"
 cp -r $MY_DIR/psds/ "$TMPDIR"
 # Now, also copy the original injection directory
