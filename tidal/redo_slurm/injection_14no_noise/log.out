@@ -1,0 +1,23 @@
+Tue Feb 27 11:55:46 CET 2024
+Running injection number: 14
+Traceback (most recent call last):
+  File "/home/twouters2/miniconda3/envs/jim/lib/python3.10/site-packages/psutil/_pslinux.py", line 2213, in cpu_affinity_set
+    cext.proc_cpu_affinity_set(self.pid, cpus)
+OSError: [Errno 22] Invalid argument
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/twouters2/jim_injections/tidal/injection_recovery.py", line 3, in <module>
+    p.cpu_affinity([0])
+  File "/home/twouters2/miniconda3/envs/jim/lib/python3.10/site-packages/psutil/__init__.py", line 867, in cpu_affinity
+    self._proc.cpu_affinity_set(list(set(cpus)))
+  File "/home/twouters2/miniconda3/envs/jim/lib/python3.10/site-packages/psutil/_pslinux.py", line 1714, in wrapper
+    return fun(self, *args, **kwargs)
+  File "/home/twouters2/miniconda3/envs/jim/lib/python3.10/site-packages/psutil/_pslinux.py", line 2225, in cpu_affinity_set
+    raise ValueError(
+ValueError: CPU number 0 is not eligible; choose between [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+Copying to: /home/twouters2/jim_injections/tidal/redo_slurm/injection_14no_noise
+Directory created: /home/twouters2/jim_injections/tidal/redo_slurm/injection_14no_noise
+Finally, moving the output files
+DONE

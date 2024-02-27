@@ -13,7 +13,7 @@ echo "$now"
 # Define dirs
 export MY_DIR=$HOME/jim_injections/tidal
 # Injection number to be ran
-declare -i injection_number=19
+declare -i injection_number=18
 export injection_number
 
 echo "Running injection number: $injection_number"

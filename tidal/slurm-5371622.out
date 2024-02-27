@@ -1,0 +1,95 @@
+Tue Feb 27 11:55:46 CET 2024
+Running injection number: 16
+2024-02-27 11:55:53.085595: E external/xla/xla/stream_executor/cuda/cuda_driver.cc:282] failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+CUDA backend failed to initialize: FAILED_PRECONDITION: No visible GPU devices. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
+------------------------------------------------
+Arguments script:
+outdir: /scratch-local/twouters2.5371622
+load_existing_config: True
+N: 16
+SNR_threshold: 12
+waveform_approximant: TaylorF2
+use_relative_binning: True
+relative_binning_binsize: 500
+relative_binning_ref_params_equal_true_params: True
+save_training_chains: False
+eps_mass_matrix: 5e-06
+smart_initial_guess: False
+use_scheduler: True
+stopping_criterion_global_acc: 0.2
+n_loop_training: 400
+n_loop_production: 50
+n_local_steps_training: 5
+n_global_steps_training: 400
+n_local_steps_production: 5
+n_global_steps_production: 400
+n_epochs: 50
+n_chains: 1000
+learning_rate: 0.001
+max_samples: 50000
+momentum: 0.9
+batch_size: 50000
+use_global: True
+logging: True
+keep_quantile: 0.0
+local_autotune: None
+train_thinning: 10
+output_thinning: 30
+n_sample_max: 10000
+precompile: False
+verbose: False
+num_layers: 10
+hidden_size: [128, 128]
+num_bins: 8
+which_local_sampler: MALA
+no_noise: False
+which_distance_prior: powerlaw
+------------------------------------------------
+Starting main code
+Using polynomial learning rate scheduler
+Saving output to /scratch-local/twouters2.5371622
+The SNR threshold parameter is set to 12
+Loading existing config, path: /scratch-local/twouters2.5371622/injection_16/config.json
+Injecting signals . . .
+The injected parameters are {'M_c': 1.9568677619484602, 'eta': 0.24893417710751992, 's1_z': 0.009735110398633173, 's2_z': 0.048980590878307986, 'lambda_1': 1064.683599128085, 'lambda_2': 3723.7220879878337, 'd_L': 126.18218167071768, 't_c': 0.023603896693900103, 'phase_c': 3.238585218011449, 'iota': 2.6408619494182575, 'psi': 0.5161579022094159, 'ra': 5.978101120559757, 'dec': -0.01944744929956209}
+Signal injected
+H1 SNR: 20.470170146862074
+L1 SNR: 16.40007825874363
+V1 SNR: 20.56958983282496
+Network SNR: 33.333143545502196
+Saving network SNR
+Saving injected signal as Numpy arrays for H1
+Saving injected signal as Numpy arrays for L1
+Saving injected signal as Numpy arrays for V1
+Start prior setup
+INFO: Using powerlaw distance prior
+Saving prior bounds
+Finished prior setup
+Initializing likelihood
+Using the true parameters as reference parameters for the relative binning
+Initializing heterodyned likelihood..
+Finding reference parameters..
+Using provided reference parameters
+Constructing reference waveforms..
+Using MALA as the local sampler
+No autotune found, use input sampler_params
+Training normalizing flow
+
+Tuning global sampler:   0%|          | 0/400 [00:00<?, ?it/s]
+Tuning global sampler:   0%|          | 1/400 [38:39<257:01:40, 2319.05s/it]slurmstepd: error: *** JOB 5371622 ON gcn10 CANCELLED AT 2024-02-27T12:56:03 DUE TO TIME LIMIT ***
+slurmstepd: error: container_p_join: setns failed for /slurm/5371622/.ns: Invalid argument
+slurmstepd: error: container_g_join(5371622): Invalid argument
+
+JOB STATISTICS
+==============
+Job ID: 5371622
+Cluster: snellius
+User/Group: twouters2/twouters2
+State: TIMEOUT (exit code 0)
+Nodes: 1
+Cores per node: 18
+CPU Utilized: 00:00:01
+CPU Efficiency: 0.00% of 18:08:24 core-walltime
+Job Wall-clock time: 01:00:28
+Memory Utilized: 7.65 GB
+Memory Efficiency: 30.60% of 25.00 GB

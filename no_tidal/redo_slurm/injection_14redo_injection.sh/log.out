@@ -1,0 +1,7 @@
+Tue Feb 27 12:36:01 CET 2024
+Running injection number: 14
+python: can't open file '/home/twouters2/jim_injections/no_tidal/injection_recovery.py': [Errno 2] No such file or directory
+Copying to: /home/twouters2/jim_injections/no_tidal/redo_slurm/injection_14redo_injection.sh
+Directory already exists: /home/twouters2/jim_injections/no_tidal/redo_slurm/injection_14redo_injection.sh
+Finally, moving the output files
+DONE
