@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBILE_DEVICES"] = ""
+os.environ["CUDA_VISIBILE_DEVICES"] = "-1"
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
@@ -30,7 +30,8 @@ postprocessing_dir = "./pp_TaylorF2/"
 
 def make_pp_plot(credible_level_list: np.array, 
                  percentile_list: list = [0.68, 0.95, 0.995], 
-                 nb_bins: int = 100) -> None:
+                 nb_bins: int = 100,
+                 params_idx: list = None) -> None:
     """
     Creates a pp plot from the credible levels.
 
@@ -86,7 +87,11 @@ def make_pp_plot(credible_level_list: np.array,
     # Will save the computed pvalues here
     pvalues = []
     print("Creating pp-plot, getting p values . . .")
-    for i, label in enumerate(utils.labels_tidal):
+    if params_idx is None:
+        params_idx = range(n_dim)
+        
+    for i in params_idx: 
+        label = utils.labels_tidal[i]
         # Compute the p-value
         p = kstest(credible_level_list[:nb_injections, i], cdf = uniform(0,1).cdf).pvalue
         # Compute the y data for the plot
@@ -124,13 +129,27 @@ def make_pp_plot(credible_level_list: np.array,
         
 if __name__ == "__main__":
     
-    credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
-                                                                    return_first=True,
-                                                                    reweigh_distance=True,
-                                                                    one_sided=False)
-    make_pp_plot(credible_levels)
+    # credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
+    #                                                                 return_first=True,
+    #                                                                 reweigh_distance=True,
+    #                                                                 one_sided=False)
+    # make_pp_plot(credible_levels)
     
-    ## Print the credible levels of the different injections for a specific parameter
+    credible_levels_one_sided, subdirs_one_sided = utils.get_credible_levels_injections(outdir, 
+                                                                    return_first=True,
+                                                                    reweigh_distance=False,
+                                                                    one_sided=True)
+    
+    make_pp_plot(credible_levels_one_sided)
+    
+    mc_credible_levels_one_sided = credible_levels_one_sided[:, 0]
+    
+    npositive = np.sum(np.where(mc_credible_levels_one_sided > 0.5, 1, 0))
+    # nnegative = np.sum(credible_levels_one_sided < 0.5)
+    
+    print(npositive)
+    
+    ## Print the credible levels of the dif ferent injections for a specific parameter
     # utils.analyze_credible_levels(credible_levels, subdirs, param_index=0)
     
     # # ### Debugging stuff - plot the samples for a specific parameter as distribution with respect to the true parameter

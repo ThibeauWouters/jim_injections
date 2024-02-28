@@ -1,8 +1,5 @@
-python injection_recovery.py \
-    --outdir ./redo_slurm/ \
-    --N "14_save_npz" \
-    --load-existing-config True \
-    --eps-mass-matrix 0.000005 \
+python old_injection_recovery.py \
+    --outdir ./outdir_TaylorF2_part3/ \
+    --relative-binning-binsize 100 \
     --stopping-criterion-global-acc 0.20 \
-    --which-distance-prior powerlaw \
     --waveform-approximant TaylorF2

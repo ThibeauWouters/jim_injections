@@ -35,9 +35,6 @@ cp -r $MY_DIR/psds/ "$TMPDIR"
 # Run the script
 python $MY_DIR/injection_recovery.py \
     --outdir $TMPDIR \
-    --n-local-steps-training 50 \
-    --n-local-steps-production 50 \
-    --eps-mass-matrix 0.0001 \
     --stopping-criterion-global-acc 0.15 \
     --waveform-approximant TaylorF2 \
  

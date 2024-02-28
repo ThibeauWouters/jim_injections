@@ -1,6 +1,5 @@
-python injection_recovery.py \
+python old_injection_recovery.py \
     --outdir ./outdir_NRTv2/ \
-    --load-existing-config True \
-    --N 1 \
-    --stopping-criterion-global-acc 0.15 \
-    --waveform-approximant IMRPhenomD_NRTidalv2 \
+    --relative-binning-binsize 100 \
+    --stopping-criterion-global-acc 0.20 \
+    --waveform-approximant IMRPhenomD_NRTidalv2
