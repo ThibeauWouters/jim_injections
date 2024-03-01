@@ -20,7 +20,7 @@ plt.rcParams.update(utils.matplotlib_params)
 
 ### Script constants
 reweigh_distance = False # whether to reweigh samples based on the distance
-outdir = "../tidal/outdir_TaylorF2_part2/"
+outdir = "../tidal/outdir_TaylorF2_part3/"
 postprocessing_dir = "./pp_TaylorF2/"
     
 ###############################
@@ -29,9 +29,12 @@ postprocessing_dir = "./pp_TaylorF2/"
 
 
 def make_pp_plot(credible_level_list: np.array, 
+                 which_percentile_calculation,
                  percentile_list: list = [0.68, 0.95, 0.995], 
                  nb_bins: int = 100,
-                 params_idx: list = None) -> None:
+                 params_idx: list = None,
+                 reweigh_distance: bool = False,
+                 ) -> None:
     """
     Creates a pp plot from the credible levels.
 
@@ -117,11 +120,14 @@ def make_pp_plot(credible_level_list: np.array,
     print("Saving pp-plot")
     plt.grid(False) # disable grid
     plt.title(title_string)
-    save_name = outdir + "pp_plot"
+    save_name = outdir + "pp_plot_" + which_percentile_calculation
+    if reweigh_distance:
+        save_name += "_reweighed"
+        
     for ext in [".png", ".pdf"]:
         full_savename = save_name + ext
+        print(f"Saving pp-plot to: {full_savename}")
         plt.savefig(full_savename, bbox_inches="tight")
-        print(f"Saved pp-plot to: {full_savename}")
         
 #############
 ### Main ####
@@ -129,35 +135,23 @@ def make_pp_plot(credible_level_list: np.array,
         
 if __name__ == "__main__":
     
-    # credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
-    #                                                                 return_first=True,
-    #                                                                 reweigh_distance=True,
-    #                                                                 one_sided=False)
-    # make_pp_plot(credible_levels)
+    which_percentile_calculation = "two_sided" # which function to use to compute the percentiles
+    reweigh_distance = False # whether to reweigh samples based on the distance, due to the SNR cutoff used
+    return_first = True # whether to just use injected params or to also look at sky mirrored locations
+    convert_cos_sin = True
     
-    credible_levels_one_sided, subdirs_one_sided = utils.get_credible_levels_injections(outdir, 
-                                                                    return_first=True,
-                                                                    reweigh_distance=False,
-                                                                    one_sided=True)
+    print(f"which_percentile_calculation is set to {which_percentile_calculation}")
+    credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
+                                                                    return_first=return_first,
+                                                                    reweigh_distance=reweigh_distance,
+                                                                    which_percentile_calculation=which_percentile_calculation,
+                                                                    save=False,
+                                                                    convert_cos_sin=convert_cos_sin)
+    make_pp_plot(credible_levels, 
+                 which_percentile_calculation=which_percentile_calculation, 
+                 reweigh_distance=reweigh_distance)
     
-    make_pp_plot(credible_levels_one_sided)
-    
-    mc_credible_levels_one_sided = credible_levels_one_sided[:, 0]
-    
-    npositive = np.sum(np.where(mc_credible_levels_one_sided > 0.5, 1, 0))
-    # nnegative = np.sum(credible_levels_one_sided < 0.5)
-    
-    print(npositive)
-    
-    ## Print the credible levels of the dif ferent injections for a specific parameter
-    # utils.analyze_credible_levels(credible_levels, subdirs, param_index=0)
-    
-    # # ### Debugging stuff - plot the samples for a specific parameter as distribution with respect to the true parameter
-    # plotkwargs = {"bins": 100, 
-    #               "histtype": "step", 
-    #               "density": True, 
-    #               "alpha": 0.25,
-    #               "color": "blue",
-    #               "linewidth": 2}
-    # utils.plot_distributions_injections(outdir, param_index=10, **plotkwargs)
-    # utils.plot_credible_levels_injections(outdir, param_index=10)
+    # Sanity checking:
+    mc_credible_levels = credible_levels[:, 0]
+    npositive = np.sum(np.where(mc_credible_levels > 0.5, 1, 0))
+    print(f"{npositive} positive credible levels out of {len(mc_credible_levels)} samples.")

@@ -18,6 +18,9 @@ from jimgw.single_event.waveform import RippleTaylorF2
 from jimgw.single_event.detector import H1, L1, V1
 from astropy.time import Time
 
+from arviz import hdi
+from scipy.optimize import bisect
+
 import sys
 sys.path.append("../tidal/")
 from injection_recovery import PRIOR, NAMING
@@ -84,6 +87,64 @@ labels_tidal = labels_tidal_lambda12 = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r
 #########################
 ### PP-PLOT UTILITIES ###
 #########################
+
+
+def get_credible_level_scipy(samples: np.array, 
+                             injected_value: float, 
+                             idx: int):
+    """
+    This function computes the credible level using the scipy functionalities.
+
+    Args:
+        samples (np.array): Posterior samples
+        injected_value (float): _description_
+        circular (bool, optional): _description_. Defaults to False.
+
+    Raises:
+        ValueError: _description_
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    
+    circular = False
+    if idx in [8, 9, 10, 11, 12]: # phic, iota, psi, alpha, delta
+        circular = True
+        
+        original_samples = copy.deepcopy(samples)
+        
+        # Do appropriate changes
+        if idx == 8: # phic, is below pi/2
+            samples = 4 * (samples % np.pi / 2)
+            # check if all close with original
+            print("DEBUG: allclose for phase_c?")
+            print(np.allclose(samples, original_samples))
+            
+        if idx == 10: # psi, is below pi
+            samples = 2 * (samples % np.pi)
+        
+        # Map the samples to the [-pi, pi] range for circular parameters
+        samples = samples - np.pi
+    
+    if circular:
+        # check if the samples and the injected value is within [-pi, pi]
+        if np.any(samples > np.pi) or np.any(samples < -np.pi):
+            raise ValueError("Samples outside of the [-pi, pi] range")
+        if injected_value > np.pi or injected_value < -np.pi:
+            raise ValueError("Injected value outside of the [-pi, pi] range")
+
+    def f(p):
+        credible_range = hdi(samples, hdi_prob=p, circular=circular)
+        left, right = credible_range
+        dist_left = injected_value - left
+        dist_right = injected_value - right
+        if np.abs(dist_left) > np.abs(dist_right):
+            return dist_right
+        else:
+            return dist_left
+
+    return bisect(f, 1e-3, 1 - 1e-3, full_output=False)
 
 def get_mirror_location(samples: np.array) -> tuple[np.array, np.array]:
     """Computes the mirrored location of the samples in the sky.
@@ -181,7 +242,8 @@ def get_true_params_and_credible_level(chains: np.array,
                                        true_params_list: np.array,
                                        return_first: bool = False,
                                        reweigh_dL: bool = True,
-                                       one_sided: bool = False) -> tuple[np.array, float]:
+                                       which_percentile_calculation="one_sided"
+                                       ) -> tuple[np.array, float]:
     """
     Finds the true parameter set from a list of true parameter sets, and also computes its credible level.
 
@@ -192,19 +254,18 @@ def get_true_params_and_credible_level(chains: np.array,
         tuple[np.array, float]: The select true parameter set, and its credible level.
     """
     
-    # TODO implement this 
-    # # Indices which have to be treated as circular
-    # circular_idx = [8, 9, 10, 11, 12]
+    # Indices which have to be treated as circular
     naming = list(PRIOR.keys())
     
-    kde_file = "../debugging/kde_dL.npz"
-    data = np.load(kde_file)
-    kde_x = data["x"]
-    kde_y = data["y"]
-    
-    weight_fn = lambda x: np.interp(x, kde_x, kde_y)
-    
     if reweigh_dL:
+        kde_file = "../debugging/kde_dL.npz"
+        data = np.load(kde_file)
+        kde_x = data["x"]
+        kde_y = data["y"]
+
+        weight_fn = lambda x: np.interp(x, kde_x, kde_y)
+        
+        # Build the weighting function
         d_L_index = naming.index("d_L")
         d_values = chains[:, d_L_index]
         d_values = np.array(d_values)
@@ -223,25 +284,29 @@ def get_true_params_and_credible_level(chains: np.array,
         true_params_list = [true_params]
     
     # When checking sky reflected as well, iterate over all "copies"
+    supported_which_percentile_calculation = ["one_sided", "two_sided", "scipy"]
+    if which_percentile_calculation not in supported_which_percentile_calculation:
+        print(f"ERROR: which_percentile_calculation is not supported. Supported are: {supported_which_percentile_calculation}")
+        print("Changing to one_sided")
+        which_percentile_calculation = "one_sided"
+        
     for i, true_params in enumerate(true_params_list):
         params_credible_level_list = []
-        
-        # ### OLD code
-        # boolean_values = np.array(chains < true_params)
-        # credible_level = np.mean(boolean_values, axis = 0)
-        # params_credible_level_list = credible_level
         
         # Iterate over each parameter of this "copy" of parameters
         for j, param in enumerate(true_params):
             
-            # TODO implement this
-            q = percentileofscore(chains[:, j], param)
-            q /= 100.0
+            # is_greater_than = chains[:, j] > param
+            # q = np.mean(is_greater_than)
             
-            if one_sided :
+            q = percentileofscore(chains[:, j], param) / 100
+            
+            if which_percentile_calculation == "one_sided":
                 credible_level = q
-            else:
+            elif which_percentile_calculation == "two_sided":
                 credible_level = 1 - 2 * min(q, 1-q)
+            elif which_percentile_calculation == "scipy":
+                credible_level = get_credible_level_scipy(chains[:, j], param, idx = j)
                 
             params_credible_level_list.append(credible_level)
         
@@ -267,7 +332,10 @@ def get_credible_levels_injections(outdir: str,
                                    return_first: bool = True,
                                    max_number_injections: int = -1,
                                    reweigh_distance: bool = True,
-                                   one_sided: bool = False) -> np.array:
+                                   thinning_factor: int = 100,
+                                   which_percentile_calculation: str = "one_sided",
+                                   save: bool = True,
+                                   convert_cos_sin: bool = True) -> np.array:
     """
     Compute the credible levels list for all the injections. 
     
@@ -313,34 +381,39 @@ def get_credible_levels_injections(outdir: str,
             data = np.load(chains_filename)
             chains = data['chains'].reshape(-1, n_dim)
             
-            # # Reweigh distance if needed
-            # if reweigh_distance:
-            #     d_L_index = naming.index("d_L")
-            #     d_values = chains[:, d_L_index]
-            #     weights = d_values ** 2
-            #     # Normalize the weights
-            #     weights /= np.sum(weights)
-            #     # Resample the chains based on these weights
-            #     indices = np.random.choice(np.arange(len(chains)), size=len(chains), p=weights)
-            #     chains = chains[indices]
+            # Thin a bit to reduce computational complexity a bit
+            chains = chains[::thinning_factor]
             
-            # # Get the sky mirrored values as well, NOTE this outputs an array of arrays!
-            mirrored_values = get_mirror_location(true_params) # tuple
-            mirrored_values = np.vstack(mirrored_values) # np array
-            all_true_params = np.vstack((true_params, mirrored_values))
+            # Convert true params and samples for cos_iota and sin_dec
+            if convert_cos_sin:
+                cos_iota_index = naming.index("cos_iota")
+                sin_dec_index = naming.index("sin_dec")
+                true_params[cos_iota_index] = np.arccos(true_params[cos_iota_index])
+                true_params[sin_dec_index] = np.arcsin(true_params[sin_dec_index])
+                chains[:, cos_iota_index] = np.arccos(chains[:, cos_iota_index])
+                chains[:, sin_dec_index] = np.arcsin(chains[:, sin_dec_index])
+            
+            # Get the sky mirrored values as well, NOTE this outputs an array of arrays!
+            if not return_first:
+                mirrored_values = get_mirror_location(true_params) # tuple
+                mirrored_values = np.vstack(mirrored_values) # np array
+                all_true_params = np.vstack((true_params, mirrored_values))
+            else:
+                all_true_params = np.array([true_params])
             
             
             true_params, credible_level = get_true_params_and_credible_level(chains, 
                                                                              all_true_params, 
                                                                              return_first=return_first,
                                                                              reweigh_dL=reweigh_distance,
-                                                                             one_sided=one_sided)
+                                                                             which_percentile_calculation=which_percentile_calculation)
             
             credible_level_list.append(credible_level)
             
             # Also save the credible level
-            filename = f"{subdir_path}/credible_level.npz"
-            np.savez(filename, credible_level=credible_level)
+            if save:
+                filename = f"{subdir_path}/credible_level.npz"
+                np.savez(filename, credible_level=credible_level)
             
             counter += 1
             if counter == max_number_injections:
