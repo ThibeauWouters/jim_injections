@@ -16,6 +16,8 @@ from jimgw.single_event.detector import H1, L1, V1
 from astropy.time import Time
 
 import utils
+import importlib
+importlib.reload(utils)
 plt.rcParams.update(utils.matplotlib_params)
 
 ### Script constants
@@ -139,11 +141,25 @@ if __name__ == "__main__":
     reweigh_distance = False # whether to reweigh samples based on the distance, due to the SNR cutoff used
     return_first = True # whether to just use injected params or to also look at sky mirrored locations
     convert_cos_sin = True
+    thinning_factor = 100
+    
+    print(f"script hyperparams: \nreweigh_distance = {reweigh_distance}, \nreturn_first = {return_first}, \nconvert_cos_sin = {convert_cos_sin}")
+    
+    kde_file = "../postprocessing/kde_dL.npz"
+    data = np.load(kde_file)
+    kde_x = data["x"]
+    kde_y = data["y"]
+
+    if reweigh_distance:
+        weight_fn = lambda x: np.interp(x, kde_x, kde_y)
+    else:
+        weight_fn = lambda x: x
     
     print(f"which_percentile_calculation is set to {which_percentile_calculation}")
     credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
                                                                     return_first=return_first,
-                                                                    reweigh_distance=reweigh_distance,
+                                                                    weight_fn=weight_fn,
+                                                                    thinning_factor=thinning_factor,
                                                                     which_percentile_calculation=which_percentile_calculation,
                                                                     save=False,
                                                                     convert_cos_sin=convert_cos_sin)

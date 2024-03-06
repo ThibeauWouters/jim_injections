@@ -19,13 +19,14 @@ from jimgw.single_event.detector import H1, L1, V1
 from astropy.time import Time
 
 from arviz import hdi
-from scipy.optimize import bisect
+from scipy.optimize import bisect, root_scalar
 
 import sys
 sys.path.append("../tidal/")
 from injection_recovery import PRIOR, NAMING
 
 from tqdm import tqdm
+from typing import Callable
 
 ### Hyperparameters
 matplotlib_params = {
@@ -109,6 +110,12 @@ def get_credible_level_scipy(samples: np.array,
     """
     
     circular = False
+    print("idx")
+    print(idx)
+    
+    name = list(PRIOR.keys())[idx]
+    print("name")
+    print(name)
     if idx in [8, 9, 10, 11, 12]: # phic, iota, psi, alpha, delta
         circular = True
         
@@ -121,11 +128,22 @@ def get_credible_level_scipy(samples: np.array,
             print("DEBUG: allclose for phase_c?")
             print(np.allclose(samples, original_samples))
             
+            injected_value = 4 * (injected_value % np.pi / 2)
+            
         if idx == 10: # psi, is below pi
             samples = 2 * (samples % np.pi)
+            
+            injected_value = 2 * (injected_value % np.pi)
         
         # Map the samples to the [-pi, pi] range for circular parameters
         samples = samples - np.pi
+        injected_value = injected_value - np.pi
+    
+    print("samples")
+    print(samples)
+    
+    print("injected_value")
+    print(injected_value)
     
     if circular:
         # check if the samples and the injected value is within [-pi, pi]
@@ -135,8 +153,7 @@ def get_credible_level_scipy(samples: np.array,
             raise ValueError("Injected value outside of the [-pi, pi] range")
 
     def f(p):
-        credible_range = hdi(samples, hdi_prob=p, circular=circular)
-        left, right = credible_range
+        left, right = hdi(samples, hdi_prob=p, circular=circular)
         dist_left = injected_value - left
         dist_right = injected_value - right
         if np.abs(dist_left) > np.abs(dist_right):
@@ -144,7 +161,26 @@ def get_credible_level_scipy(samples: np.array,
         else:
             return dist_left
 
-    return bisect(f, 1e-3, 1 - 1e-3, full_output=False)
+    eps = 1e-3
+    first_p = eps
+    last_p = 1 - eps
+    
+    p_array = np.linspace(first_p, last_p, 100)
+    f_array = np.array([f(p) for p in p_array])
+    print("f_array")
+    print(f_array)
+    
+    ## Old code
+    # return bisect(f, first_p, last_p, full_output=False)
+    
+    ## New code (different method)
+    method = 'newton'
+    root = root_scalar(f, method=method, x0 = 0.5)
+    
+    print("root")
+    print(root)
+    
+    return root
 
 def get_mirror_location(samples: np.array) -> tuple[np.array, np.array]:
     """Computes the mirrored location of the samples in the sky.
@@ -241,7 +277,7 @@ def make_uniform_cumulative_histogram(size: tuple, nb_bins: int = 100) -> np.arr
 def get_true_params_and_credible_level(chains: np.array, 
                                        true_params_list: np.array,
                                        return_first: bool = False,
-                                       reweigh_dL: bool = True,
+                                       weight_fn: Callable = lambda x: x,
                                        which_percentile_calculation="one_sided"
                                        ) -> tuple[np.array, float]:
     """
@@ -257,26 +293,18 @@ def get_true_params_and_credible_level(chains: np.array,
     # Indices which have to be treated as circular
     naming = list(PRIOR.keys())
     
-    if reweigh_dL:
-        kde_file = "../debugging/kde_dL.npz"
-        data = np.load(kde_file)
-        kde_x = data["x"]
-        kde_y = data["y"]
-
-        weight_fn = lambda x: np.interp(x, kde_x, kde_y)
-        
-        # Build the weighting function
-        d_L_index = naming.index("d_L")
-        d_values = chains[:, d_L_index]
-        d_values = np.array(d_values)
-        # Compute the weights
-        weights = weight_fn(d_values)
-        weights = 1 / weights
-        # Normalize the weights
-        weights /= np.sum(weights)
-        # Resample the chains based on these weights
-        indices = np.random.choice(np.arange(len(chains)), size=len(chains), p=weights)
-        chains = chains[indices]
+    # Build the weighting function
+    d_L_index = naming.index("d_L")
+    d_values = chains[:, d_L_index]
+    d_values = np.array(d_values)
+    # Compute the weights
+    weights = weight_fn(d_values)
+    weights = 1 / weights
+    # Normalize the weights
+    weights /= np.sum(weights)
+    # Resample the chains based on these weights
+    indices = np.random.choice(np.arange(len(chains)), size=len(chains), p=weights)
+    chains = chains[indices]
     
     if return_first:
         # Ignore the sky location mirrors, just take the first one
@@ -331,7 +359,7 @@ def get_true_params_and_credible_level(chains: np.array,
 def get_credible_levels_injections(outdir: str, 
                                    return_first: bool = True,
                                    max_number_injections: int = -1,
-                                   reweigh_distance: bool = True,
+                                   weight_fn: Callable = lambda x: x,
                                    thinning_factor: int = 100,
                                    which_percentile_calculation: str = "one_sided",
                                    save: bool = True,
@@ -360,7 +388,7 @@ def get_credible_levels_injections(outdir: str,
     counter = 0
     
     print("Iterating over the injections, going to compute the credible levels")
-    print("NOTE: reweigh_distance is set to ", reweigh_distance)
+    # print("NOTE: reweigh_distance is set to ", reweigh_distance)
     for subdir in tqdm(os.listdir(outdir)):
         subdir_path = os.path.join(outdir, subdir)
         
@@ -405,7 +433,7 @@ def get_credible_levels_injections(outdir: str,
             true_params, credible_level = get_true_params_and_credible_level(chains, 
                                                                              all_true_params, 
                                                                              return_first=return_first,
-                                                                             reweigh_dL=reweigh_distance,
+                                                                             weight_fn=weight_fn,
                                                                              which_percentile_calculation=which_percentile_calculation)
             
             credible_level_list.append(credible_level)

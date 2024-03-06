@@ -1,7 +1,7 @@
 python old_injection_recovery.py \
-    --outdir ../tidal/redo_slurm/ \
+    --outdir ../tidal/test_outdir/ \
     --load-existing-config True \
-    --N 14 \
-    --relative-binning-binsize 100 \
+    --N "1_NRTv2" \
+    --relative-binning-binsize 1000 \
     --stopping-criterion-global-acc 0.20 \
     --waveform-approximant TaylorF2

@@ -1,12 +1,12 @@
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "2"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.25"
-import numpy as np
-import argparse
-# The following is needed on CIT cluster to avoid an obscure Python error
 import psutil
 p = psutil.Process()
 p.cpu_affinity([0])
+
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = "2"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.1"
+import numpy as np
+import argparse
 # Regular imports 
 import argparse
 import copy
@@ -430,6 +430,9 @@ def body(args):
         ref_params = None
         print("Will search for reference waveform for relative binning")
         
+        
+    ### Saving the binning scheme and corresponding likelihood here!
+    my_name = f"injection_1_{args.waveform_approximant}_new"
     likelihood = HeterodynedTransientLikelihoodFD(
         ifos,
         prior=complete_prior,
@@ -440,100 +443,19 @@ def body(args):
         duration=config["duration"],
         post_trigger_duration=config["post_trigger_duration"],
         ref_params=ref_params,
-        save_binning_scheme=True
+        save_binning_scheme=True,
+        save_binning_scheme_location="./binnings/",
+        save_binning_scheme_name=my_name
         )
     
     # Save the ref params
     utils.save_relative_binning_ref_params(likelihood, outdir)
-
-    # Generate arguments for the local sampler
-    mass_matrix = jnp.eye(len(prior_list))
-    for idx, prior in enumerate(prior_list):
-        mass_matrix = mass_matrix.at[idx, idx].set(prior.xmax - prior.xmin) # fetch the prior range
-    local_sampler_arg = {'step_size': mass_matrix * args.eps_mass_matrix} # set the overall step size
-    hyperparameters["local_sampler_arg"] = local_sampler_arg
     
-    # Create jim object
-    jim = Jim(
-        likelihood, 
-        complete_prior,
-        nf_lr_autotune = True,
-        **hyperparameters
-    )
+    import pickle 
+    with open(f"./likelihoods/{my_name}_likelihood.pkl", "wb") as file:
+        pickle.dump(likelihood, file)
     
-    if args.smart_initial_guess:
-        n_chains = hyperparameters["n_chains"]
-        n_dim = len(prior_list)
-        initial_guess = utils.generate_smart_initial_guess(gmst, [H1, L1, V1], true_param, n_chains, n_dim, prior_low, prior_high)
-        # Plot it
-        utils.plot_chains(initial_guess, "initial_guess", outdir, truths = truths)
-    else:
-        initial_guess = jnp.array([])
-    
-    ### Finally, do the sampling
-    jim.sample(jax.random.PRNGKey(24), initial_guess = initial_guess)
-        
-    # === Show results, save output ===
-
-    # Print a summary to screen:
-    jim.print_summary()
-
-    # Save and plot the results of the run
-    #  - training phase
-    
-    name = outdir + f'results_training.npz'
-    print(f"Saving samples to {name}")
-    state = jim.Sampler.get_sampler_state(training = True)
-    chains, log_prob, local_accs, global_accs, loss_vals = state["chains"], state["log_prob"], state["local_accs"], state["global_accs"], state["loss_vals"]
-    local_accs = jnp.mean(local_accs, axis=0)
-    global_accs = jnp.mean(global_accs, axis=0)
-    if args.save_training_chains:
-        np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs, loss_vals=loss_vals, chains=chains)
-    else:
-        np.savez(name, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs, loss_vals=loss_vals)
-    
-    utils.plot_accs(local_accs, "Local accs (training)", "local_accs_training", outdir)
-    utils.plot_accs(global_accs, "Global accs (training)", "global_accs_training", outdir)
-    utils.plot_loss_vals(loss_vals, "Loss", "loss_vals", outdir)
-    utils.plot_log_prob(log_prob, "Log probability (training)", "log_prob_training", outdir)
-    
-    #  - production phase
-    name = outdir + f'results_production.npz'
-    state = jim.Sampler.get_sampler_state(training = False)
-    chains, log_prob, local_accs, global_accs = state["chains"], state["log_prob"], state["local_accs"], state["global_accs"]
-    local_accs = jnp.mean(local_accs, axis=0)
-    global_accs = jnp.mean(global_accs, axis=0)
-    np.savez(name, chains=chains, log_prob=log_prob, local_accs=local_accs, global_accs=global_accs)
-
-    utils.plot_accs(local_accs, "Local accs (production)", "local_accs_production", outdir)
-    utils.plot_accs(global_accs, "Global accs (production)", "global_accs_production", outdir)
-    utils.plot_log_prob(log_prob, "Log probability (production)", "log_prob_production", outdir)
-
-    # Plot the chains as corner plots
-    utils.plot_chains(chains, "chains_production", outdir, truths = truths)
-    
-    # Save the NF and show a plot of samples from the flow
-    print("Saving the NF")
-    jim.Sampler.save_flow(outdir + "nf_model")
-    name = outdir + 'results_NF.npz'
-    chains = jim.Sampler.sample_flow(10_000)
-    np.savez(name, chains = chains)
-    
-    # Finally, copy over this script to the outdir for reproducibility
-    shutil.copy2(__file__, outdir + "copy_injection_recovery.py")
-    
-    print("Saving the jim hyperparameters")
-    jim.save_hyperparameters(outdir = outdir)
-    
-    end_time = time.time()
-    runtime = end_time - start_time
-    print(f"Time taken: {runtime} seconds ({(runtime)/60} minutes)")
-    
-    print(f"Saving runtime")
-    with open(outdir + 'runtime.txt', 'w') as file:
-        file.write(str(runtime))
-    
-    print("Finished injection recovery successfully!")
+    print("Finished successfully!")
 
 ############
 ### MAIN ###
