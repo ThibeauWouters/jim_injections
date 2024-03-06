@@ -1,10 +1,10 @@
-import psutil
-p = psutil.Process()
-p.cpu_affinity([0])
+# import psutil
+# p = psutil.Process()
+# p.cpu_affinity([0])
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "3"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
+# os.environ['CUDA_VISIBLE_DEVICES'] = "3"
+# os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.3"
 
 import optax
 import utils  # our plotting and postprocessing utilities script

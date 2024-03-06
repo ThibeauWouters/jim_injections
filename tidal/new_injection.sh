@@ -14,7 +14,7 @@ echo "Running new injection"
 
 # Define dirs
 export MY_DIR=$HOME/jim_injections/tidal
-export base_dir=$MY_DIR/new_slurm
+export base_dir=$MY_DIR/outdir_TaylorF2_snellius
 
 # Count the number of subdirectories
 num_subdirectories=$(find "$base_dir" -maxdepth 1 -mindepth 1 -type d | wc -l)
@@ -28,17 +28,18 @@ module load Python/3.10.4-GCCcore-11.3.0
 conda activate jim
  
 # Copy necessary files
-cp $MY_DIR/injection_recovery.py "$TMPDIR"
+cp $MY_DIR/old_injection_recovery.py "$TMPDIR"
 cp $MY_DIR/utils.py "$TMPDIR"
 cp -r $MY_DIR/psds/ "$TMPDIR"
 
 # Run the script
-python $MY_DIR/injection_recovery.py \
+python $MY_DIR/old_injection_recovery.py \
     --outdir $TMPDIR \
-    --stopping-criterion-global-acc 0.15 \
+    --relative-binning-binsize 250 \
+    --stopping-criterion-global-acc 0.20 \
     --waveform-approximant TaylorF2 \
- 
-export final_output_dir="$MY_DIR/new_slurm/injection_$new_number"
+
+export final_output_dir="$base_dir/injection_$new_number"
 echo "Copying to: $final_output_dir"
 
 #Copy output directory from scratch to home, but first check if exists
