@@ -6,7 +6,7 @@ p = psutil.Process()
 p.cpu_affinity([0])
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = "3"
-os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.20"
+os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.10"
 import numpy as np
 import argparse
 # Regular imports 
@@ -455,7 +455,27 @@ def body(args):
         ref_params = None
         print("Will search for reference waveform for relative binning")
     
-    
+    ### TODO remove
+    # Explicitly fix relative binning for NRTidalv2
+    if args.waveform_approximant in ["IMRPhenomD_NRTidalv2", "NRTidalv2"]:
+        # ## TODO this might be broken?
+        # # # Explicitly set the f_min and f_max used there
+        # # relbin_kwargs = {"f_min": config["fmin"], "f_max": config["f_sampling"] / 2}
+        # relbin_kwargs = {}
+        
+        # # Set the reference parameters at the ideal location for not breaking relative binning 
+        # print("Setting the reference parameters to not break the relative binning for NRTidalv2")
+        # ref_params = true_param 
+        # ref_params["lambda_1"] = 1.0
+        # ref_params["lambda_2"] = 1.0
+        
+        print("Now, the reference parameters are: ")
+        print(ref_params)
+    else:
+        relbin_kwargs = {}
+        
+    relbin_kwargs = {}
+        
     likelihood = HeterodynedTransientLikelihoodFD(
         ifos,
         prior=complete_prior,
@@ -465,7 +485,8 @@ def body(args):
         trigger_time=config["trigger_time"],
         duration=config["duration"],
         post_trigger_duration=config["post_trigger_duration"],
-        ref_params=ref_params # put the reference waveform of the relative binning at the true parameters
+        ref_params=ref_params,
+        **relbin_kwargs
         )
     
     if args.save_likelihood:

@@ -70,20 +70,54 @@ default_corner_kwargs = dict(bins=40,
                         min_n_ticks=3,
                         save=False)
 
-labels_tidal_deltalambda = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\tilde{\Lambda}$', r'$\delta\tilde{\Lambda}$', r'$d_{\rm{L}}/{\rm Mpc}$',
-               r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
-
 labels_tidal_lambda12 = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda_1$', r'$\Lambda_2$', r'$d_{\rm{L}}/{\rm Mpc}$',
-               r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
-
-labels_tidal_deltalambda_chi_eff = [r'$M_c/M_\odot$', r'$q$', r'$\chi_{\rm eff}$', r'$\tilde{\Lambda}$', r'$\delta\tilde{\Lambda}$', r'$d_{\rm{L}}/{\rm Mpc}$',
                r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
 
 labels_tidal_lambda12_chi_eff = [r'$M_c/M_\odot$', r'$q$', r'$\chi_{\rm eff}$', r'$\Lambda_1$', r'$\Lambda_2$', r'$d_{\rm{L}}/{\rm Mpc}$',
                r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
 
-labels_tidal = labels_tidal_lambda12 = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda_1$', r'$\Lambda_2$', r'$d_{\rm{L}}/{\rm Mpc}$',
+labels_tidal_deltalambda = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\tilde{\Lambda}$', r'$\delta\tilde{\Lambda}$', r'$d_{\rm{L}}/{\rm Mpc}$',
                r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
+
+labels_tidal_deltalambda_chi_eff = [r'$M_c/M_\odot$', r'$q$', r'$\chi_{\rm eff}$', r'$\tilde{\Lambda}$', r'$\delta\tilde{\Lambda}$', r'$d_{\rm{L}}/{\rm Mpc}$',
+               r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
+
+# This is our default
+labels_tidal = [r'$M_c/M_\odot$', r'$q$', r'$\chi_1$', r'$\chi_2$', r'$\Lambda_1$', r'$\Lambda_2$', r'$d_{\rm{L}}/{\rm Mpc}$',
+               r'$t_c$', r'$\phi_c$', r'$\cos\iota$', r'$\psi$', r'$\alpha$', r'$\sin\delta$']
+
+# For the combined, these are the values:
+p_calculation_dict = {"M_c": "one_sided",
+                      "q": "one_sided",
+                      "s1_z": "two_sided",
+                      "s2_z": "two_sided",
+                      "lambda_1": "one_sided", # for lambda tilde: one_sided, for lambdas: two_sided
+                      "lambda_2": "two_sided", # for both: two_sided is best
+                      "d_L": "two_sided",
+                      "t_c": "one_sided",
+                      "phase_c": "circular", # "one_sided"
+                      "cos_iota": "one_sided",
+                      "psi": "one_sided", # "one_sided"
+                      "ra": "two_sided", # "two_sided"
+                      "sin_dec": "two_sided"
+                      }
+
+p_calculation_dict_chi_eff = {"M_c": "one_sided",
+                      "q": "one_sided",
+                      "chi_eff": "two_sided",
+                      "lambda_1": "one_sided",
+                      "lambda_2": "two_sided",
+                      "d_L": "two_sided",
+                      "t_c": "one_sided",
+                      "phase_c": "circular", # "one_sided"
+                      "cos_iota": "one_sided",
+                      "psi": "one_sided", # "one_sided"
+                      "ra": "two_sided", # "two_sided"
+                      "sin_dec": "two_sided"
+                      }
+
+p_calculation_dict_values = list(p_calculation_dict.values())
+p_calculation_dict_chi_eff_values = list(p_calculation_dict_chi_eff.values())
 
 #########################
 ### PP-PLOT UTILITIES ###
@@ -116,24 +150,24 @@ def get_credible_level_scipy(samples: np.array,
     name = list(PRIOR.keys())[idx]
     print("name")
     print(name)
-    if idx in [8, 9, 10, 11, 12]: # phic, iota, psi, alpha, delta
+    if idx in [8, 10, 11]: # phic, psi, alpha
         circular = True
         
         original_samples = copy.deepcopy(samples)
         
         # Do appropriate changes
         if idx == 8: # phic, is below pi/2
-            samples = 4 * (samples % np.pi / 2)
+            samples = 4 * (samples % (np.pi / 2))
             # check if all close with original
             print("DEBUG: allclose for phase_c?")
             print(np.allclose(samples, original_samples))
             
-            injected_value = 4 * (injected_value % np.pi / 2)
+            injected_value = 4 * (injected_value % (np.pi / 2))
             
         if idx == 10: # psi, is below pi
-            samples = 2 * (samples % np.pi)
+            samples = 4 * (samples % (np.pi / 2))
             
-            injected_value = 2 * (injected_value % np.pi)
+            injected_value = 4 * (injected_value % (np.pi / 2))
         
         # Map the samples to the [-pi, pi] range for circular parameters
         samples = samples - np.pi
@@ -171,16 +205,75 @@ def get_credible_level_scipy(samples: np.array,
     print(f_array)
     
     ## Old code
-    # return bisect(f, first_p, last_p, full_output=False)
+    return bisect(f, first_p, last_p, full_output=False)
     
-    ## New code (different method)
-    method = 'newton'
-    root = root_scalar(f, method=method, x0 = 0.5)
+    # ## New code (different method)
+    # method = 'newton'
+    # root = root_scalar(f, method=method, x0 = 0.5)
     
     print("root")
     print(root)
     
     return root
+
+def get_credible_level_circular(samples: np.array, 
+                                injected_value: float, 
+                                name: str,
+                                nb_bins: int = 20,
+                                debug_plotting: bool = False):
+    """
+    This function computes the credible level using the scipy functionalities.
+
+    Args:
+        samples (np.array): Posterior samples
+        injected_value (float): _description_
+        circular (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
+    
+    # Do appropriate changes
+    if name in ["phase_c", "psi"]:
+        samples = 4 * (samples % (np.pi / 2))
+        injected_value = 4 * (injected_value % (np.pi / 2))
+        
+    # Get the histogram for nb_bins bins, then find the location of the largest bin
+    hist, bin_edges = np.histogram(samples, bins = nb_bins, range=(0, 2 * np.pi))
+    max_bin = np.argmax(hist)
+    # Get the middle of the bin edge with highest count
+    bin_spacing = bin_edges[1] - bin_edges[0]
+    middle = bin_edges[max_bin] + bin_spacing / 2
+    old_injected_value = injected_value # for plotting
+    
+    # Shift all the samples and injected value by the middle, so that middle is at zero now
+    samples = samples - middle + np.pi
+    injected_value = injected_value - middle + np.pi
+    
+    # Make sure they are mapped to the [0, 2pi] range
+    samples = samples % (2 * np.pi)
+    injected_value = injected_value % (2 * np.pi)
+    
+    if debug_plotting:
+        new_hist, new_bin_edges = np.histogram(samples, bins = 50, range=(0, 2 * np.pi))
+        # make a plot to check
+        plt.stairs(hist, bin_edges, color="blue", linewidth=2)
+        plt.axvline(old_injected_value, color="blue", linestyle="-", label="old inj")
+        plt.axvline(middle, color="black", linestyle="--", label="middle")
+        plt.stairs(new_hist, new_bin_edges, color="red", linewidth=2)
+        plt.axvline(injected_value, color="red", linestyle="-", label="new inj")
+        # plt.legend()
+        plt.savefig(f"./pp_TaylorF2/histograms/circular_{name}_{injected_value}.png")
+        plt.close()
+        
+    # Get the percentile of the injected value
+    percentile = percentileofscore(samples, injected_value) / 100
+    
+    # TODO toggle one sided or two sided by the user
+    percentile = 1 - 2 * min(percentile, 1-percentile)
+    
+    return percentile
+    
 
 def get_mirror_location(samples: np.array) -> tuple[np.array, np.array]:
     """Computes the mirrored location of the samples in the sky.
@@ -278,7 +371,9 @@ def get_true_params_and_credible_level(chains: np.array,
                                        true_params_list: np.array,
                                        return_first: bool = False,
                                        weight_fn: Callable = lambda x: x,
-                                       which_percentile_calculation="one_sided"
+                                       which_percentile_calculation="one_sided",
+                                       convert_to_chi_eff: bool=False,
+                                       convert_to_lambda_tilde: bool=False
                                        ) -> tuple[np.array, float]:
     """
     Finds the true parameter set from a list of true parameter sets, and also computes its credible level.
@@ -310,9 +405,65 @@ def get_true_params_and_credible_level(chains: np.array,
         # Ignore the sky location mirrors, just take the first one
         true_params = true_params_list[0]
         true_params_list = [true_params]
+        
+    if convert_to_chi_eff:
+        # Convert to chi_eff
+        mc_index = naming.index("M_c")
+        q_index = naming.index("q")
+        chi1_index = naming.index("s1_z")
+        chi2_index = naming.index("s2_z")
+        for i, true_param in enumerate(true_params_list):
+            
+            chi_eff_true = compute_chi_eff(true_param[mc_index], true_param[q_index], true_param[chi1_index], true_param[chi2_index])
+            new_true_params = np.array([true_param[mc_index], true_param[q_index], chi_eff_true, true_param[4], true_param[5], true_param[6], true_param[7], true_params[8], true_param[9], true_param[10], true_param[11], true_param[12]])
+            true_params_list[i] = new_true_params
+            
+        # Also convert the chains
+        chi_eff = compute_chi_eff(chains[:, mc_index], chains[:, q_index], chains[:, chi1_index], chains[:, chi2_index])
+        chains = np.array([chains[:, mc_index], chains[:, q_index], chi_eff, chains[:, 4], chains[:, 5], chains[:, 6], chains[:, 7], chains[:, 8], chains[:, 9], chains[:, 10], chains[:, 11], chains[:, 12]]).T
+        
+        # Delete chi2 from naming
+        naming.pop(chi2_index)
+        
+        # Also fetch correct values for the percentile calculations:
+        local_p_calculation_dict_values = p_calculation_dict_chi_eff_values
+    else:
+        local_p_calculation_dict_values = p_calculation_dict_values
+        
+    if convert_to_lambda_tilde:
+        lambda1_index = naming.index("lambda_1")
+        lambda2_index = naming.index("lambda_2")
+        
+        for i, true_param in enumerate(true_params_list):
+            mc, q = true_param[0], true_param[1]
+            eta = q/(1+q)**2
+            lambda1 = true_param[lambda1_index]
+            lambda2 = true_param[lambda2_index]
+            # Convert to component masses
+            m1, m2 = Mc_eta_to_ms(jnp.array([mc, eta]))
+            lambda_tilde_true, delta_lambda_tilde_true = lambdas_to_lambda_tildes(jnp.array([lambda1, lambda2, m1, m2]))
+            
+            # Replace lambdas with new lambdas
+            new_true_params = copy.deepcopy(true_param)
+            new_true_params[lambda1_index] = lambda_tilde_true
+            new_true_params[lambda2_index] = delta_lambda_tilde_true
+            
+            # Save back in the list
+            true_params_list[i] = new_true_params
+            
+        # Also convert the chains
+        mc = chains[:, mc_index]
+        q = chains[:, q_index]
+        eta = q/(1+q)**2
+        lambda1 = chains[:, lambda1_index]
+        lambda2 = chains[:, lambda2_index]
+        m1, m2 = Mc_eta_to_ms(jnp.array([mc, eta]))
+        lambda_tilde, delta_lambda_tilde = lambdas_to_lambda_tildes(jnp.array([lambda1, lambda2, m1, m2]))
+        chains[:, lambda1_index] = lambda_tilde
+        chains[:, lambda2_index] = delta_lambda_tilde
     
     # When checking sky reflected as well, iterate over all "copies"
-    supported_which_percentile_calculation = ["one_sided", "two_sided", "scipy"]
+    supported_which_percentile_calculation = ["one_sided", "two_sided", "scipy", "combined", "circular"]
     if which_percentile_calculation not in supported_which_percentile_calculation:
         print(f"ERROR: which_percentile_calculation is not supported. Supported are: {supported_which_percentile_calculation}")
         print("Changing to one_sided")
@@ -324,17 +475,26 @@ def get_true_params_and_credible_level(chains: np.array,
         # Iterate over each parameter of this "copy" of parameters
         for j, param in enumerate(true_params):
             
-            # is_greater_than = chains[:, j] > param
-            # q = np.mean(is_greater_than)
-            
+            # Get the q value in case it is needed below
             q = percentileofscore(chains[:, j], param) / 100
             
-            if which_percentile_calculation == "one_sided":
+            # If combined way, then choose the appropriate one for this parameter
+            if which_percentile_calculation == "combined":
+                local_which_percentile_calculation = local_p_calculation_dict_values[j]
+            else:
+                local_which_percentile_calculation = which_percentile_calculation
+            
+            # TODO add the combined option here
+            if local_which_percentile_calculation == "one_sided":
                 credible_level = q
-            elif which_percentile_calculation == "two_sided":
+            elif local_which_percentile_calculation == "two_sided":
                 credible_level = 1 - 2 * min(q, 1-q)
-            elif which_percentile_calculation == "scipy":
+            # NOTE scipy is broken!
+            elif local_which_percentile_calculation == "scipy":
                 credible_level = get_credible_level_scipy(chains[:, j], param, idx = j)
+            elif local_which_percentile_calculation == "circular":
+                name = naming[j]
+                credible_level = get_credible_level_circular(chains[:, j], param, name = name)
                 
             params_credible_level_list.append(credible_level)
         
@@ -363,7 +523,9 @@ def get_credible_levels_injections(outdir: str,
                                    thinning_factor: int = 100,
                                    which_percentile_calculation: str = "one_sided",
                                    save: bool = True,
-                                   convert_cos_sin: bool = True) -> np.array:
+                                   convert_cos_sin: bool = True,
+                                   convert_to_chi_eff: bool = False,
+                                   convert_to_lambda_tilde: bool = False) -> np.array:
     """
     Compute the credible levels list for all the injections. 
     
@@ -377,6 +539,7 @@ def get_credible_levels_injections(outdir: str,
     
     # Get parameter names
     naming = list(PRIOR.keys())
+        
     print("naming")
     print(naming)
     n_dim = len(naming)
@@ -434,7 +597,9 @@ def get_credible_levels_injections(outdir: str,
                                                                              all_true_params, 
                                                                              return_first=return_first,
                                                                              weight_fn=weight_fn,
-                                                                             which_percentile_calculation=which_percentile_calculation)
+                                                                             which_percentile_calculation=which_percentile_calculation,
+                                                                             convert_to_chi_eff=convert_to_chi_eff,
+                                                                             convert_to_lambda_tilde=convert_to_lambda_tilde)
             
             credible_level_list.append(credible_level)
             
@@ -531,39 +696,41 @@ def plot_credible_levels_injections(outdir: str,
     plt.close()
 
 
-def analyze_credible_levels(credible_levels, 
-                            subdirs, 
-                            param_index = 0, 
-                            nb_round: int = 5):
-    subdirs = np.array(subdirs)
+### TODO remove this? Deprecated
+
+# def analyze_credible_levels(credible_levels, 
+#                             subdirs, 
+#                             param_index = 0, 
+#                             nb_round: int = 5):
+#     subdirs = np.array(subdirs)
     
-    credible_levels_param = credible_levels[:, param_index]
+#     credible_levels_param = credible_levels[:, param_index]
     
-    # Sort 
-    sorted_indices = np.argsort(credible_levels_param)
-    credible_levels_param = credible_levels_param[sorted_indices]
-    credible_levels = credible_levels[sorted_indices]
-    subdirs_sorted = subdirs[sorted_indices]
+#     # Sort 
+#     sorted_indices = np.argsort(credible_levels_param)
+#     credible_levels_param = credible_levels_param[sorted_indices]
+#     credible_levels = credible_levels[sorted_indices]
+#     subdirs_sorted = subdirs[sorted_indices]
     
-    for i, (subdir, credible_level) in enumerate(zip(subdirs_sorted, credible_levels_param)):
-        print(f"{subdir}: {np.round(credible_level, nb_round)}")
+#     for i, (subdir, credible_level) in enumerate(zip(subdirs_sorted, credible_levels_param)):
+#         print(f"{subdir}: {np.round(credible_level, nb_round)}")
 
-####################################
-### Further postprocessing tools ###
-####################################
+# ####################################
+# ### Further postprocessing tools ###
+# ####################################
 
-def test_tile():
-    array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
-    print("np.shape(array)")
-    print(np.shape(array))
+# def test_tile():
+#     array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]])
+#     print("np.shape(array)")
+#     print(np.shape(array))
 
-    # Repeat along the second axis to create the desired shape (1000, 5, 13)
-    result_array = np.tile(array[:, np.newaxis, :], (1, 5, 1))
+#     # Repeat along the second axis to create the desired shape (1000, 5, 13)
+#     result_array = np.tile(array[:, np.newaxis, :], (1, 5, 1))
 
-    print("np.shape(result_array)")
-    print(np.shape(result_array))
+#     print("np.shape(result_array)")
+#     print(np.shape(result_array))
 
-    print(result_array[:, 0, :])
+#     print(result_array[:, 0, :])
     
 def my_format(number: float):
     return "{:.2f}".format(number)

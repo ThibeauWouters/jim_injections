@@ -23,12 +23,14 @@ plt.rcParams.update(utils.matplotlib_params)
 ### Script constants
 reweigh_distance = False # whether to reweigh samples based on the distance
 outdir = "../tidal/outdir_TaylorF2_part3/"
+outdir = "../tidal/outdir_NRTv2_ref_wf_no_taper/"
 postprocessing_dir = "./pp_TaylorF2/"
     
 ###############################
 ### Post-injection analysis ###
 ###############################
 
+naming = ['M_c', 'q', 's1_z', 's2_z', 'lambda_1', 'lambda_2', 'd_L', 't_c', 'phase_c', 'cos_iota', 'psi', 'ra', 'sin_dec']
 
 def make_pp_plot(credible_level_list: np.array, 
                  which_percentile_calculation,
@@ -36,12 +38,15 @@ def make_pp_plot(credible_level_list: np.array,
                  nb_bins: int = 100,
                  params_idx: list = None,
                  reweigh_distance: bool = False,
+                 convert_to_chi_eff: bool = False,
+                 convert_to_lambda_tilde: bool = False,
+                 labels = utils.labels_tidal,
                  ) -> None:
     """
     Creates a pp plot from the credible levels.
 
     Args:
-        credible_level_list (np.array): List of credible levels obtained from injections.
+        credible_level_list (np.array): List of crxedible levels obtained from injections.
         percentile (float/list, optional): Percentile used for upper and lower quantile. Defaults to 0.05.
         nb_bins (int, optional): Number of bins in the histogram. Defaults to 100.
     """
@@ -51,8 +56,8 @@ def make_pp_plot(credible_level_list: np.array,
     legend_fontsize = 20
     handlelength = 1
     linewidth = 2
-    min_alpha = 0.05
-    max_alpha = 0.15
+    min_alpha = 0.10
+    max_alpha = 0.25
     shadow_color = "gray"
     n = np.shape(credible_level_list)[1]
     color_list = cm.rainbow(np.linspace(0, 1, n))
@@ -96,7 +101,7 @@ def make_pp_plot(credible_level_list: np.array,
         params_idx = range(n_dim)
         
     for i in params_idx: 
-        label = utils.labels_tidal[i]
+        label = labels[i]
         # Compute the p-value
         p = kstest(credible_level_list[:nb_injections, i], cdf = uniform(0,1).cdf).pvalue
         # Compute the y data for the plot
@@ -125,6 +130,10 @@ def make_pp_plot(credible_level_list: np.array,
     save_name = outdir + "pp_plot_" + which_percentile_calculation
     if reweigh_distance:
         save_name += "_reweighed"
+    if convert_to_chi_eff:
+        save_name += "_chieff"
+    if convert_to_lambda_tilde:
+        save_name += "_lambdatilde"
         
     for ext in [".png", ".pdf"]:
         full_savename = save_name + ext
@@ -137,11 +146,13 @@ def make_pp_plot(credible_level_list: np.array,
         
 if __name__ == "__main__":
     
-    which_percentile_calculation = "two_sided" # which function to use to compute the percentiles
+    which_percentile_calculation = "combined" # which function to use to compute the percentiles
+    convert_to_chi_eff = True # whether to convert spins to chi eff or not
     reweigh_distance = False # whether to reweigh samples based on the distance, due to the SNR cutoff used
     return_first = True # whether to just use injected params or to also look at sky mirrored locations
-    convert_cos_sin = True
-    thinning_factor = 100
+    convert_cos_sin = True # convert from cos iota and sin dec to iota and dec
+    convert_to_lambda_tilde = False
+    thinning_factor = 10
     
     print(f"script hyperparams: \nreweigh_distance = {reweigh_distance}, \nreturn_first = {return_first}, \nconvert_cos_sin = {convert_cos_sin}")
     
@@ -154,6 +165,19 @@ if __name__ == "__main__":
         weight_fn = lambda x: np.interp(x, kde_x, kde_y)
     else:
         weight_fn = lambda x: x
+        
+    # Choose the correct labels
+    if convert_to_lambda_tilde:
+        if convert_to_chi_eff:
+            labels = utils.labels_tidal_deltalambda_chi_eff
+        else:
+            labels = utils.labels_tidal_deltalambda
+    else:
+        if convert_to_chi_eff:
+            labels = utils.labels_tidal_lambda12_chi_eff
+        else:
+            labels = utils.labels_tidal_lambda12
+        
     
     print(f"which_percentile_calculation is set to {which_percentile_calculation}")
     credible_levels, subdirs = utils.get_credible_levels_injections(outdir, 
@@ -162,12 +186,19 @@ if __name__ == "__main__":
                                                                     thinning_factor=thinning_factor,
                                                                     which_percentile_calculation=which_percentile_calculation,
                                                                     save=False,
-                                                                    convert_cos_sin=convert_cos_sin)
+                                                                    convert_cos_sin=convert_cos_sin,
+                                                                    convert_to_chi_eff=convert_to_chi_eff,
+                                                                    convert_to_lambda_tilde=convert_to_lambda_tilde)
     make_pp_plot(credible_levels, 
                  which_percentile_calculation=which_percentile_calculation, 
-                 reweigh_distance=reweigh_distance)
+                 reweigh_distance=reweigh_distance,
+                 convert_to_chi_eff=convert_to_chi_eff,
+                 convert_to_lambda_tilde=convert_to_lambda_tilde,
+                 labels = labels)
     
-    # Sanity checking:
-    mc_credible_levels = credible_levels[:, 0]
-    npositive = np.sum(np.where(mc_credible_levels > 0.5, 1, 0))
-    print(f"{npositive} positive credible levels out of {len(mc_credible_levels)} samples.")
+    utils.analyze_runtimes(outdir)
+    
+    # # Sanity checking:
+    # mc_credible_levels = credible_levels[:, 0]
+    # npositive = np.sum(np.where(mc_credible_levels > 0.5, 1, 0))
+    # print(f"{npositive} positive credible levels out of {len(mc_credible_levels)} samples.")
